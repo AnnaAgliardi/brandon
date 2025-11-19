@@ -358,34 +358,47 @@ export default function IngestPage() {
 
                       <div className="space-y-2">
                         <Label htmlFor="license_usage">License Type (Usage)</Label>
-                        <Input
-                          id="license_usage"
-                          placeholder="e.g., royalty_free"
+                        <Select
                           value={metadata.license_type_usage}
-                          onChange={(e) =>
+                          onValueChange={(value) =>
                             setMetadata({
                               ...metadata,
-                              license_type_usage: e.target.value,
+                              license_type_usage: value,
                             })
                           }
-                        />
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select license type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Creative">Creative</SelectItem>
+                            <SelectItem value="Editorial">Editorial</SelectItem>
+                            <SelectItem value="Company">Company</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
 
                       <div className="space-y-2">
                         <Label htmlFor="license_subscription">
                           License Type (Subscription)
                         </Label>
-                        <Input
-                          id="license_subscription"
-                          placeholder="e.g., standard"
+                        <Select
                           value={metadata.license_type_subscription}
-                          onChange={(e) =>
+                          onValueChange={(value) =>
                             setMetadata({
                               ...metadata,
-                              license_type_subscription: e.target.value,
+                              license_type_subscription: value,
                             })
                           }
-                        />
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select subscription type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Standard">Standard</SelectItem>
+                            <SelectItem value="Premium">Premium</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
                   </div>
