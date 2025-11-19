@@ -49,7 +49,7 @@ export type GeminiVisionResponse = z.infer<typeof GeminiVisionResponseSchema>
 export const AssetMetadataSchema = z.object({
   // Optional external references
   dam_id: z.string().optional().nullable(),
-  url: z.string().url().optional().nullable().or(z.literal('')),
+  url: z.string().transform((val) => val === '' ? null : val).pipe(z.string().url().nullable()).optional(),
   file_name: z.string().optional().nullable(),
   acquired_at: z.string().optional().nullable(),
 
