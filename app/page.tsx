@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase-browser'
 import { ChatMessage, BrandonAsset } from '@/lib/types'
@@ -22,6 +22,8 @@ export default function ChatPage() {
   const [statusMessage, setStatusMessage] = useState('')
   const [userRole, setUserRole] = useState<'admin' | 'user' | null>(null)
   const [isLoadingHistory, setIsLoadingHistory] = useState(true)
+  const [isClearing, setIsClearing] = useState(false)
+  const [isPending, startTransition] = useTransition()
 
   // Check authentication and load chat history
   useEffect(() => {
@@ -90,7 +92,18 @@ export default function ChatPage() {
   }
 
   async function handleClearHistory() {
-    if (!confirm('Are you sure you want to clear your chat history?')) {
+    // Set loading state immediately for instant feedback
+    setIsClearing(true)
+
+    // Use setTimeout to defer the confirm dialog to avoid blocking
+    const shouldClear = await new Promise<boolean>((resolve) => {
+      setTimeout(() => {
+        resolve(confirm('Are you sure you want to clear your chat history?'))
+      }, 0)
+    })
+
+    if (!shouldClear) {
+      setIsClearing(false)
       return
     }
 
@@ -99,7 +112,10 @@ export default function ChatPage() {
         data: { session },
       } = await supabase.auth.getSession()
 
-      if (!session) return
+      if (!session) {
+        setIsClearing(false)
+        return
+      }
 
       const response = await fetch('/api/history', {
         method: 'DELETE',
@@ -109,10 +125,16 @@ export default function ChatPage() {
       })
 
       if (response.ok) {
-        setMessages([])
+        // Use startTransition to defer state update and avoid blocking UI
+        startTransition(() => {
+          setMessages([])
+        })
       }
     } catch (error) {
       console.error('Error clearing history:', error)
+      alert('Failed to clear chat history. Please try again.')
+    } finally {
+      setIsClearing(false)
     }
   }
 
@@ -260,9 +282,14 @@ export default function ChatPage() {
                 Ingest Assets
               </Button>
             )}
-            <Button variant="outline" size="sm" onClick={handleClearHistory}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleClearHistory}
+              disabled={isClearing || isLoading}
+            >
               <Trash2 className="h-4 w-4 mr-2" />
-              Clear History
+              {isClearing ? 'Clearing...' : 'Clear History'}
             </Button>
             <Button variant="outline" size="sm" onClick={handleLogout}>
               <LogOut className="h-4 w-4 mr-2" />
