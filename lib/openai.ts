@@ -1,14 +1,15 @@
 import OpenAI from 'openai'
 
-if (!process.env.OPENAI_API_KEY) {
-  throw new Error('OPENAI_API_KEY is not set')
-}
-
+// Use a placeholder key during build, validate at runtime
 export const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY || 'placeholder-for-build',
 })
 
 export async function generateEmbedding(text: string): Promise<number[]> {
+  if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === 'placeholder-for-build') {
+    throw new Error('OPENAI_API_KEY is not set')
+  }
+
   try {
     const response = await openai.embeddings.create({
       model: 'text-embedding-3-large',

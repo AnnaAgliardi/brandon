@@ -34,7 +34,7 @@ export default function AdminDashboard() {
             <CardContent>
               <p className="text-sm text-muted-foreground mb-4">
                 Upload images, generate AI descriptions, and make them searchable
-                in Brandon's chat interface.
+                in Brandon&apos;s chat interface.
               </p>
               <Button onClick={() => router.push('/admin/ingest')}>
                 Ingest Assets

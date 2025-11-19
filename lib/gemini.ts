@@ -1,11 +1,8 @@
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai'
 import { GeminiVisionResponseSchema, GeminiChatResponseSchema } from './types'
 
-if (!process.env.GEMINI_API_KEY) {
-  throw new Error('GEMINI_API_KEY is not set')
-}
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
+// Use a placeholder key during build, validate at runtime
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'placeholder-for-build')
 
 // Vision model for image analysis - using Gemini 3 Pro Preview
 export const visionModel = genAI.getGenerativeModel({
@@ -13,38 +10,38 @@ export const visionModel = genAI.getGenerativeModel({
   generationConfig: {
     responseMimeType: 'application/json',
     responseSchema: {
-      type: 'object',
+      type: SchemaType.OBJECT,
       properties: {
-        summary: { type: 'string' },
-        subjects: { type: 'array', items: { type: 'string' } },
-        mood: { type: 'array', items: { type: 'string' } },
+        summary: { type: SchemaType.STRING },
+        subjects: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
+        mood: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
         setting: {
-          type: 'object',
+          type: SchemaType.OBJECT,
           properties: {
-            environment: { type: 'string' },
-            time_of_day: { type: 'string' },
-            weather: { type: 'string' },
+            environment: { type: SchemaType.STRING },
+            time_of_day: { type: SchemaType.STRING },
+            weather: { type: SchemaType.STRING },
           },
           required: ['environment', 'time_of_day', 'weather'],
         },
         composition: {
-          type: 'object',
+          type: SchemaType.OBJECT,
           properties: {
-            orientation: { type: 'string' },
-            shot_type: { type: 'string' },
-            focus: { type: 'string' },
+            orientation: { type: SchemaType.STRING },
+            shot_type: { type: SchemaType.STRING },
+            focus: { type: SchemaType.STRING },
           },
           required: ['orientation', 'shot_type', 'focus'],
         },
         usage: {
-          type: 'object',
+          type: SchemaType.OBJECT,
           properties: {
-            typical_channels: { type: 'array', items: { type: 'string' } },
-            tone: { type: 'array', items: { type: 'string' } },
+            typical_channels: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
+            tone: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
           },
           required: ['typical_channels', 'tone'],
         },
-        keywords: { type: 'array', items: { type: 'string' } },
+        keywords: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
       },
       required: ['summary', 'subjects', 'mood', 'setting', 'composition', 'usage', 'keywords'],
     },
@@ -90,21 +87,21 @@ Respond with JSON containing:
   generationConfig: {
     responseMimeType: 'application/json',
     responseSchema: {
-      type: 'object',
+      type: SchemaType.OBJECT,
       properties: {
-        assistant_message: { type: 'string' },
+        assistant_message: { type: SchemaType.STRING },
         assets: {
-          type: 'array',
+          type: SchemaType.ARRAY,
           items: {
-            type: 'object',
+            type: SchemaType.OBJECT,
             properties: {
-              id: { type: 'string' },
-              dam_id: { type: 'string', nullable: true },
-              file_name: { type: 'string', nullable: true },
-              url: { type: 'string', nullable: true },
-              preview_path: { type: 'string' },
-              label: { type: 'string' },
-              reason: { type: 'string' },
+              id: { type: SchemaType.STRING },
+              dam_id: { type: SchemaType.STRING, nullable: true },
+              file_name: { type: SchemaType.STRING, nullable: true },
+              url: { type: SchemaType.STRING, nullable: true },
+              preview_path: { type: SchemaType.STRING },
+              label: { type: SchemaType.STRING },
+              reason: { type: SchemaType.STRING },
             },
             required: ['id', 'preview_path', 'label', 'reason'],
           },
@@ -119,6 +116,10 @@ export async function analyzeImage(
   imageBuffer: Buffer,
   mimeType: string
 ): Promise<any> {
+  if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'placeholder-for-build') {
+    throw new Error('GEMINI_API_KEY is not set')
+  }
+
   const prompt = `<task>
 Analyze this automotive/technology brand asset image and provide a comprehensive structured description.
 </task>
@@ -175,6 +176,10 @@ export async function generateChatResponse(
   userQuery: string,
   candidates: any[]
 ): Promise<any> {
+  if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'placeholder-for-build') {
+    throw new Error('GEMINI_API_KEY is not set')
+  }
+
   const prompt = `<user_query>
 ${userQuery}
 </user_query>

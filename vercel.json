@@ -1,0 +1,15 @@
+{
+    "buildCommand": "next build",
+    "devCommand": "next dev",
+    "installCommand": "npm install",
+    "framework": "nextjs",
+    "functions": {
+        "app/api/**": {
+            "maxDuration": 60,
+            "memory": 3008
+        }
+    },
+    "regions": [
+        "iad1"
+    ]
+}

@@ -1,21 +1,20 @@
 import { Pinecone } from '@pinecone-database/pinecone'
 import { PineconeMetadata } from './types'
 
-if (!process.env.PINECONE_API_KEY) {
-  throw new Error('PINECONE_API_KEY is not set')
-}
-
-if (!process.env.PINECONE_INDEX_NAME) {
-  throw new Error('PINECONE_INDEX_NAME is not set')
-}
-
+// Use placeholders during build, validate at runtime
 const pinecone = new Pinecone({
-  apiKey: process.env.PINECONE_API_KEY,
+  apiKey: process.env.PINECONE_API_KEY || 'placeholder-for-build',
 })
 
-const indexName = process.env.PINECONE_INDEX_NAME
+const indexName = process.env.PINECONE_INDEX_NAME || 'placeholder-for-build'
 
 export function getPineconeIndex() {
+  if (!process.env.PINECONE_API_KEY || process.env.PINECONE_API_KEY === 'placeholder-for-build') {
+    throw new Error('PINECONE_API_KEY is not set')
+  }
+  if (!process.env.PINECONE_INDEX_NAME || process.env.PINECONE_INDEX_NAME === 'placeholder-for-build') {
+    throw new Error('PINECONE_INDEX_NAME is not set')
+  }
   return pinecone.index(indexName)
 }
 
