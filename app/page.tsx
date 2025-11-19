@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase-browser'
 import { ChatMessage, BrandonAsset } from '@/lib/types'
 import { AssetCard } from '@/components/asset-card'
 import { ThinkingIndicator } from '@/components/thinking-indicator'
+import { ConfirmDialog } from '@/components/confirm-dialog'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { LogOut, Trash2, Send } from 'lucide-react'
@@ -23,6 +24,7 @@ export default function ChatPage() {
   const [userRole, setUserRole] = useState<'admin' | 'user' | null>(null)
   const [isLoadingHistory, setIsLoadingHistory] = useState(true)
   const [isClearing, setIsClearing] = useState(false)
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
   const [isPending, startTransition] = useTransition()
 
   // Check authentication and load chat history
@@ -92,20 +94,16 @@ export default function ChatPage() {
   }
 
   async function handleClearHistory() {
-    // Set loading state immediately for instant feedback
+    // Show the confirmation dialog (non-blocking)
+    setShowConfirmDialog(true)
+  }
+
+  async function confirmClearHistory() {
+    // Close the dialog
+    setShowConfirmDialog(false)
+
+    // Set loading state
     setIsClearing(true)
-
-    // Use setTimeout to defer the confirm dialog to avoid blocking
-    const shouldClear = await new Promise<boolean>((resolve) => {
-      setTimeout(() => {
-        resolve(confirm('Are you sure you want to clear your chat history?'))
-      }, 0)
-    })
-
-    if (!shouldClear) {
-      setIsClearing(false)
-      return
-    }
 
     try {
       const {
@@ -368,6 +366,18 @@ export default function ChatPage() {
           </form>
         </div>
       </div>
+
+      {/* Confirmation Dialog */}
+      <ConfirmDialog
+        open={showConfirmDialog}
+        onOpenChange={setShowConfirmDialog}
+        onConfirm={confirmClearHistory}
+        title="Clear Chat History"
+        description="Are you sure you want to clear your chat history? This action cannot be undone."
+        confirmText="Clear History"
+        cancelText="Cancel"
+        isDestructive
+      />
     </div>
   )
 }
