@@ -502,17 +502,24 @@ export default function IngestPage() {
 
                         <div className="space-y-2">
                           <Label htmlFor="region">Region Representation</Label>
-                          <Input
-                            id="region"
-                            placeholder="e.g., European"
+                          <Select
                             value={metadata.region_representation || ''}
-                            onChange={(e) =>
+                            onValueChange={(value) =>
                               setMetadata({
                                 ...metadata,
-                                region_representation: e.target.value,
+                                region_representation: value,
                               })
                             }
-                          />
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select region" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="AMER">AMER</SelectItem>
+                              <SelectItem value="EMEA">EMEA</SelectItem>
+                              <SelectItem value="APAC">APAC</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
 
                         <div className="space-y-2">
