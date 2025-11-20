@@ -37,7 +37,7 @@ export default function AdminDashboard() {
                 in Brandon&apos;s chat interface.
               </p>
               <Button onClick={() => router.push('/admin/ingest')}>
-                Ingest Assets
+                Admin Dashboard
               </Button>
             </CardContent>
           </Card>
