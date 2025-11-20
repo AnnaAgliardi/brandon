@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Upload, MessageSquare, ArrowLeft } from 'lucide-react'
+import { Upload, MessageSquare, ArrowLeft, Database } from 'lucide-react'
 
 export default function AdminDashboard() {
   const router = useRouter()
@@ -40,30 +40,51 @@ export default function AdminDashboard() {
                 Ingest Assets
               </Button>
             </CardContent>
-          </Card>
+          </CardContent>
+        </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5" />
-                Brandon Chat
-              </CardTitle>
-              <CardDescription>
-                Test asset search and chat functionality
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground mb-4">
-                Return to the main chat interface to test searching for assets
-                and interact with Brandon.
-              </p>
-              <Button variant="outline" onClick={() => router.push('/')}>
-                Go to Chat
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Database className="h-5 w-5" />
+              Manage Assets
+            </CardTitle>
+            <CardDescription>
+              View, edit, and delete ingested assets
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              Browse all assets in a table view. Edit metadata, replace images, or delete assets individually or in bulk.
+            </p>
+            <Button variant="outline" onClick={() => router.push('/admin/assets')}>
+              Manage Assets
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <MessageSquare className="h-5 w-5" />
+              Brandon Chat
+            </CardTitle>
+            <CardDescription>
+              Test asset search and chat functionality
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              Return to the main chat interface to test searching for assets
+              and interact with Brandon.
+            </p>
+            <Button variant="outline" onClick={() => router.push('/')}>
+              Go to Chat
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     </div>
+    </div >
   )
 }
