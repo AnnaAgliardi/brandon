@@ -275,9 +275,9 @@ export default function ChatPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => router.push('/admin/ingest')}
+                onClick={() => router.push('/admin')}
               >
-                Ingest Assets
+                Admin Dashboard
               </Button>
             )}
             <Button
