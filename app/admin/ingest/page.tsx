@@ -239,7 +239,8 @@ export default function BulkIngestPage() {
       const generatedData = await generateRes.json()
 
       // Step 2: Ingest the asset with all data
-      const ingestPayload = {
+      // Build payload, excluding null/undefined optional fields
+      const ingestPayload: any = {
         storage_path: generatedData.storage_path,
         preview_path: generatedData.preview_path,
         preview_url: generatedData.preview_url,
@@ -247,25 +248,27 @@ export default function BulkIngestPage() {
         llm_description: generatedData.llm_description,
         llm_metadata: generatedData.llm_metadata,
         tags: generatedData.tags,
-        // Add metadata with proper defaults
+        // Required fields with defaults
         usage_rights: metadata.usage_rights || 'internal_only',
         status: metadata.status || 'draft',
         image_purchase_date: metadata.image_purchase_date || new Date().toISOString().split('T')[0],
         image_capture_date: metadata.image_capture_date || new Date().toISOString().split('T')[0],
         license_type_usage: metadata.license_type_usage || 'Creative',
         license_type_subscription: metadata.license_type_subscription || 'Standard',
-        brand: metadata.brand || null,
-        region_representation: metadata.region_representation || null,
-        campaign: metadata.campaign || null,
-        location: metadata.location || null,
-        partner: metadata.partner || null,
-        client: metadata.client || null,
-        collection: metadata.collection || null,
-        dam_id: metadata.dam_id || null,
-        file_name: metadata.file_name || null,
-        url: metadata.url || null,
-        acquired_at: metadata.acquired_at || null,
       }
+
+      // Add optional fields only if they have values
+      if (metadata.brand) ingestPayload.brand = metadata.brand
+      if (metadata.region_representation) ingestPayload.region_representation = metadata.region_representation
+      if (metadata.campaign) ingestPayload.campaign = metadata.campaign
+      if (metadata.location) ingestPayload.location = metadata.location
+      if (metadata.partner) ingestPayload.partner = metadata.partner
+      if (metadata.client) ingestPayload.client = metadata.client
+      if (metadata.collection) ingestPayload.collection = metadata.collection
+      if (metadata.dam_id) ingestPayload.dam_id = metadata.dam_id
+      if (metadata.file_name) ingestPayload.file_name = metadata.file_name
+      if (metadata.url) ingestPayload.url = metadata.url
+      if (metadata.acquired_at) ingestPayload.acquired_at = metadata.acquired_at
 
       console.log('Ingest payload:', JSON.stringify(ingestPayload, null, 2))
 
@@ -543,8 +546,9 @@ export default function BulkIngestPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="internal_only">Internal Only</SelectItem>
-                    <SelectItem value="external_allowed">External Allowed</SelectItem>
-                    <SelectItem value="public">Public</SelectItem>
+                    <SelectItem value="web_approved">Web Approved</SelectItem>
+                    <SelectItem value="print_approved">Print Approved</SelectItem>
+                    <SelectItem value="all_channels">All Channels</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
