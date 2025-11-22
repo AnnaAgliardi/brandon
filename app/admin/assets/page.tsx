@@ -329,10 +329,10 @@ export default function AssetsManagerPage() {
                                         )}
                                         <span
                                             className={`px-2 py-1 rounded ${asset.status === 'approved'
-                                                    ? 'bg-green-100 text-green-800'
-                                                    : asset.status === 'draft'
-                                                        ? 'bg-yellow-100 text-yellow-800'
-                                                        : 'bg-gray-100 text-gray-800'
+                                                ? 'bg-green-100 text-green-800'
+                                                : asset.status === 'draft'
+                                                    ? 'bg-yellow-100 text-yellow-800'
+                                                    : 'bg-gray-100 text-gray-800'
                                                 }`}
                                         >
                                             {asset.status}
@@ -380,39 +380,28 @@ export default function AssetsManagerPage() {
                                         <Download className="h-4 w-4 mr-2" />
                                         Download Original
                                     </Button>
+
+                                    <Input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(e) => setNewImageFile(e.target.files?.[0] || null)}
+                                        className="hidden"
+                                        id="replace-image"
+                                    />
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        onClick={() => handleDownload('preview')}
+                                        onClick={() =>
+                                            document.getElementById('replace-image')?.click()
+                                        }
                                     >
-                                        <Download className="h-4 w-4 mr-2" />
-                                        Download Preview
+                                        <Upload className="h-4 w-4 mr-2" />
+                                        {newImageFile ? 'Change Image' : 'Replace Image'}
                                     </Button>
-                                    {isEditing && (
-                                        <>
-                                            <Input
-                                                type="file"
-                                                accept="image/*"
-                                                onChange={(e) => setNewImageFile(e.target.files?.[0] || null)}
-                                                className="hidden"
-                                                id="replace-image"
-                                            />
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() =>
-                                                    document.getElementById('replace-image')?.click()
-                                                }
-                                            >
-                                                <Upload className="h-4 w-4 mr-2" />
-                                                {newImageFile ? 'Change Image' : 'Replace Image'}
-                                            </Button>
-                                            {newImageFile && (
-                                                <span className="text-sm text-muted-foreground self-center">
-                                                    {newImageFile.name}
-                                                </span>
-                                            )}
-                                        </>
+                                    {newImageFile && (
+                                        <span className="text-sm text-muted-foreground self-center">
+                                            {newImageFile.name}
+                                        </span>
                                     )}
                                 </div>
                             </div>
