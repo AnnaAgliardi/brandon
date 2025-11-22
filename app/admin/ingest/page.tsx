@@ -242,11 +242,24 @@ export default function BulkIngestPage() {
       const ingestPayload = {
         storage_path: generatedData.storage_path,
         preview_path: generatedData.preview_path,
+        preview_url: generatedData.preview_url,
         mime_type: generatedData.mime_type,
-        llm_description: generatedData.description,
-        llm_metadata: generatedData.metadata,
+        llm_description: generatedData.llm_description,
+        llm_metadata: generatedData.llm_metadata,
         tags: generatedData.tags,
-        ...metadata,
+        // Add metadata with proper defaults
+        usage_rights: metadata.usage_rights || 'internal_only',
+        status: metadata.status || 'draft',
+        image_purchase_date: metadata.image_purchase_date || new Date().toISOString().split('T')[0],
+        image_capture_date: metadata.image_capture_date || new Date().toISOString().split('T')[0],
+        license_type_usage: metadata.license_type_usage || 'Creative',
+        license_type_subscription: metadata.license_type_subscription || 'Standard',
+        brand: metadata.brand || null,
+        region_representation: metadata.region_representation || null,
+        campaign: metadata.campaign || null,
+        location: metadata.location || null,
+        partner: metadata.partner || null,
+        client: metadata.client || null,
       }
 
       const ingestRes = await fetch('/api/admin/ingest', {
@@ -377,7 +390,7 @@ export default function BulkIngestPage() {
               <div>
                 <Label>Status</Label>
                 <Select
-                  value={sharedMetadata.status}
+                  value={sharedMetadata.status || 'draft'}
                   onValueChange={(value: any) =>
                     setSharedMetadata({ ...sharedMetadata, status: value })
                   }
