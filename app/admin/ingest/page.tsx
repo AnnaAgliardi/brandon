@@ -262,6 +262,8 @@ export default function BulkIngestPage() {
         client: metadata.client || null,
       }
 
+      console.log('Ingest payload:', JSON.stringify(ingestPayload, null, 2))
+
       const ingestRes = await fetch('/api/admin/ingest', {
         method: 'POST',
         headers: {
