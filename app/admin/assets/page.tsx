@@ -131,12 +131,11 @@ export default function AssetsManagerPage() {
                 <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <Label>Status Filter</Label>
-                        <Select value={statusFilter} onValueChange={setStatusFilter}>
+                        <Select value={statusFilter || undefined} onValueChange={setStatusFilter}>
                             <SelectTrigger>
                                 <SelectValue placeholder="All Statuses" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="">All</SelectItem>
                                 <SelectItem value="draft">Draft</SelectItem>
                                 <SelectItem value="approved">Approved</SelectItem>
                                 <SelectItem value="archived">Archived</SelectItem>
