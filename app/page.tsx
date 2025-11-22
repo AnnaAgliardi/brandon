@@ -427,11 +427,11 @@ export default function ChatPage() {
       </div>
 
       {/* Input */}
-      <div className="border-t bg-card">
+      <div className="border-t bg-background fixed bottom-0 left-0 right-0 z-50">
         <div className="container mx-auto px-4 py-4 max-w-4xl">
           <form onSubmit={handleSubmit} className="flex flex-col gap-2 w-full">
             {imagePreview && (
-              <div className="relative w-fit">
+              <div className="relative w-fit mb-2">
                 <div className="rounded-lg overflow-hidden border bg-muted h-20 w-20">
                   <img
                     src={imagePreview}
@@ -448,7 +448,7 @@ export default function ChatPage() {
                 </button>
               </div>
             )}
-            <div className="flex gap-2">
+            <div className="flex items-center gap-3">
               <input
                 type="file"
                 accept="image/*"
@@ -459,32 +459,45 @@ export default function ChatPage() {
               <Button
                 type="button"
                 variant="outline"
-                size="icon"
+                className="rounded-xl h-12 px-4 border-input hover:bg-accent hover:text-accent-foreground flex items-center gap-2 whitespace-nowrap"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isLoading}
               >
-                <Camera className="h-4 w-4" />
+                <Camera className="h-5 w-5" />
+                <span className="font-medium">Search by image</span>
               </Button>
-              <Textarea
-                placeholder="Ask me to find brand assets..."
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault()
-                    handleSubmit(e)
-                  }
-                }}
-                disabled={isLoading}
-                className="min-h-[60px] resize-none"
-              />
-              <Button type="submit" disabled={isLoading || (!inputValue.trim() && !selectedImage)}>
-                <Send className="h-4 w-4" />
+
+              <div className="flex-1 relative">
+                <input
+                  type="text"
+                  placeholder="Ask me to find brand assets..."
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      handleSubmit(e)
+                    }
+                  }}
+                  disabled={isLoading}
+                  className="w-full h-12 px-4 rounded-xl bg-muted/50 border-0 focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all placeholder:text-muted-foreground"
+                />
+              </div>
+
+              <Button
+                type="submit"
+                disabled={isLoading || (!inputValue.trim() && !selectedImage)}
+                className="h-12 w-12 rounded-xl bg-slate-800 hover:bg-slate-700 text-white shrink-0 p-0 flex items-center justify-center"
+              >
+                <Send className="h-5 w-5" />
               </Button>
             </div>
           </form>
         </div>
       </div>
+
+      {/* Spacer for fixed input */}
+      <div className="h-24" />
 
       {/* Confirmation Dialog */}
       <ConfirmDialog
