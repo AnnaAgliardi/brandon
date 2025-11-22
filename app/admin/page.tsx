@@ -45,6 +45,26 @@ export default function AdminDashboard() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
+                <Upload className="h-5 w-5" />
+                Asset Manager
+              </CardTitle>
+              <CardDescription>
+                View overview of all uploaded assets
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-4">
+                Browse your asset library with stats and filters.
+              </p>
+              <Button variant="outline" onClick={() => router.push('/admin/assets')}>
+                View Assets
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
                 <MessageSquare className="h-5 w-5" />
                 Brandon Chat
               </CardTitle>
