@@ -205,25 +205,25 @@ export default function BulkIngestPage() {
         throw new Error('Not authenticated')
       }
 
+      // Step 1: Generate description and upload file
       const formData = new FormData()
 
-      // Add file or URL
       if (fileItem.file) {
-        formData.append('file', fileItem.file)
+        formData.append('image', fileItem.file)
       } else if (fileItem.url) {
-        formData.append('url', fileItem.url)
+        // For URLs, we need to fetch and convert to blob
+        const response = await fetch(fileItem.url)
+        const blob = await response.blob()
+        formData.append('image', blob, 'url-import.jpg')
+      } else {
+        throw new Error('No file or URL provided')
       }
 
       // Add metadata
       const metadata = { ...sharedMetadata, ...fileItem.metadata }
-      Object.entries(metadata).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          formData.append(key, value.toString())
-        }
-      })
+      formData.append('metadata', JSON.stringify(metadata))
 
-      // Upload with progress
-      const res = await fetch('/api/admin/ingest', {
+      const generateRes = await fetch('/api/admin/generate-description', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${session.access_token}`,
@@ -231,9 +231,36 @@ export default function BulkIngestPage() {
         body: formData,
       })
 
-      if (!res.ok) {
-        const errorData = await res.json()
-        throw new Error(errorData.error || 'Upload failed')
+      if (!generateRes.ok) {
+        const errorData = await generateRes.json()
+        throw new Error(errorData.error || 'Failed to process image')
+      }
+
+      const generatedData = await generateRes.json()
+
+      // Step 2: Ingest the asset with all data
+      const ingestPayload = {
+        storage_path: generatedData.storage_path,
+        preview_path: generatedData.preview_path,
+        mime_type: generatedData.mime_type,
+        llm_description: generatedData.description,
+        llm_metadata: generatedData.metadata,
+        tags: generatedData.tags,
+        ...metadata,
+      }
+
+      const ingestRes = await fetch('/api/admin/ingest', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify(ingestPayload),
+      })
+
+      if (!ingestRes.ok) {
+        const errorData = await ingestRes.json()
+        throw new Error(errorData.error || 'Failed to save asset')
       }
 
       // Success
@@ -278,8 +305,8 @@ export default function BulkIngestPage() {
         {/* Drag & Drop Zone */}
         <div
           className={`border-2 border-dashed rounded-lg p-12 mb-8 text-center transition-colors ${isDragging
-              ? 'border-primary bg-primary/5'
-              : 'border-muted-foreground/25'
+            ? 'border-primary bg-primary/5'
+            : 'border-muted-foreground/25'
             }`}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
