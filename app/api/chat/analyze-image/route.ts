@@ -40,9 +40,12 @@ export async function POST(request: NextRequest) {
         const analysis = await analyzeImage(buffer, mimeType)
 
         // Combine user query with image analysis if present
+        // Note: analysis object has 'summary', not 'llm_description'
+        const imageDescription = `${analysis.summary}. Subjects: ${analysis.subjects.join(', ')}. Keywords: ${analysis.keywords.join(', ')}`
+
         const searchContext = query
-            ? `User query: "${query}". Image content: ${analysis.llm_description}`
-            : analysis.llm_description
+            ? `User query: "${query}". Image content: ${imageDescription}`
+            : imageDescription
 
         console.log('Analysis complete. Generating embedding...')
 
@@ -87,8 +90,8 @@ export async function POST(request: NextRequest) {
         // 8. Save Interaction (Optional: Save image to storage if needed, currently just saving text)
         // We save the analysis as the user content to provide context in history
         const userContent = query
-            ? `[Image Upload] ${query} \n\nImage Analysis: ${analysis.llm_description}`
-            : `[Image Upload] Image Analysis: ${analysis.llm_description}`
+            ? `[Image Upload] ${query} \n\nImage Analysis: ${analysis.summary}`
+            : `[Image Upload] Image Analysis: ${analysis.summary}`
 
         await supabase.from('chat_messages').insert({
             user_id: user.id,
