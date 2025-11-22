@@ -113,8 +113,7 @@ export async function PATCH(
             }
 
             // Analyze new image with Gemini
-            const base64Image = buffer.toString('base64')
-            const analysisResult = await analyzeImage(base64Image)
+            const analysisResult = await analyzeImage(buffer, 'image/jpeg')
             llmDescription = analysisResult.description
             tags = analysisResult.tags
 
@@ -140,8 +139,8 @@ export async function PATCH(
             .update({
                 storage_path: updatedStoragePath,
                 preview_path: updatedPreviewPath,
-                llm_description,
-                tags,
+                llm_description: llmDescription,
+                tags: tags,
                 usage_rights: metadata.usage_rights || existingAsset.usage_rights,
                 status: metadata.status || existingAsset.status,
                 image_purchase_date:
