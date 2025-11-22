@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { requireAdmin } from '@/lib/auth-helpers'
-import { AssetMetadataSchema } from '@/lib/types'
 import { upsertVector, deleteVector } from '@/lib/pinecone'
 import { generateEmbedding } from '@/lib/openai'
+import { analyzeImage } from '@/lib/gemini'
 import { PineconeMetadata } from '@/lib/types'
+import sharp from 'sharp'
 
 export async function PATCH(
     request: NextRequest,
@@ -34,10 +35,18 @@ export async function PATCH(
         await requireAdmin(supabase)
 
         const { id } = params
-        const body = await request.json()
 
-        // Validate metadata
-        const validatedData = AssetMetadataSchema.parse(body)
+        // Parse FormData
+        const formData = await request.formData()
+        const newImage = formData.get('newImage') as File | null
+
+        // Extract metadata fields from FormData
+        const metadata: any = {}
+        for (const [key, value] of formData.entries()) {
+            if (key !== 'newImage' && value) {
+                metadata[key] = value
+            }
+        }
 
         // Use service role client for database operations
         const supabaseAdmin = createClient(
@@ -45,27 +54,117 @@ export async function PATCH(
             process.env.SUPABASE_SERVICE_ROLE_KEY!
         )
 
+        // Get existing asset
+        const { data: existingAsset, error: fetchError } = await supabaseAdmin
+            .from('assets')
+            .select('*')
+            .eq('id', id)
+            .single()
+
+        if (fetchError || !existingAsset) {
+            return NextResponse.json({ error: 'Asset not found' }, { status: 404 })
+        }
+
+        let updatedStoragePath = existingAsset.storage_path
+        let updatedPreviewPath = existingAsset.preview_path
+        let llmDescription = existingAsset.llm_description
+        let tags = existingAsset.tags
+
+        // Handle image replacement
+        if (newImage) {
+            const timestamp = Date.now()
+            const fileName = `asset_${timestamp}`
+
+            // Convert File to Buffer
+            const arrayBuffer = await newImage.arrayBuffer()
+            const buffer = Buffer.from(arrayBuffer)
+
+            // Upload full image
+            const fullPath = `${fileName}.jpg`
+            const { error: fullUploadError } = await supabaseAdmin.storage
+                .from('assets-full')
+                .upload(fullPath, buffer, {
+                    contentType: 'image/jpeg',
+                    upsert: true,
+                })
+
+            if (fullUploadError) {
+                console.error('Error uploading full image:', fullUploadError)
+                throw new Error('Failed to upload full image')
+            }
+
+            // Generate preview (512px max)
+            const previewBuffer = await sharp(buffer)
+                .resize(512, 512, { fit: 'inside', withoutEnlargement: true })
+                .jpeg({ quality: 85 })
+                .toBuffer()
+
+            const previewPath = `${fileName}_preview.jpg`
+            const { error: previewUploadError } = await supabaseAdmin.storage
+                .from('assets-preview')
+                .upload(previewPath, previewBuffer, {
+                    contentType: 'image/jpeg',
+                    upsert: true,
+                })
+
+            if (previewUploadError) {
+                console.error('Error uploading preview:', previewUploadError)
+                throw new Error('Failed to upload preview')
+            }
+
+            // Analyze new image with Gemini
+            const base64Image = buffer.toString('base64')
+            const analysisResult = await analyzeImage(base64Image)
+            llmDescription = analysisResult.description
+            tags = analysisResult.tags
+
+            // Delete old images
+            if (existingAsset.storage_path) {
+                await supabaseAdmin.storage
+                    .from('assets-full')
+                    .remove([existingAsset.storage_path])
+            }
+            if (existingAsset.preview_path) {
+                await supabaseAdmin.storage
+                    .from('assets-preview')
+                    .remove([existingAsset.preview_path])
+            }
+
+            updatedStoragePath = fullPath
+            updatedPreviewPath = previewPath
+        }
+
         // Update asset in database
         const { data: asset, error: updateError } = await supabaseAdmin
             .from('assets')
             .update({
-                usage_rights: validatedData.usage_rights,
-                status: validatedData.status,
-                image_purchase_date: validatedData.image_purchase_date,
-                image_capture_date: validatedData.image_capture_date,
-                license_type_usage: validatedData.license_type_usage,
-                license_type_subscription: validatedData.license_type_subscription,
-                dam_id: validatedData.dam_id || null,
-                url: validatedData.url || null,
-                file_name: validatedData.file_name || null,
-                acquired_at: validatedData.acquired_at || null,
-                partner: validatedData.partner || null,
-                client: validatedData.client || null,
-                brand: validatedData.brand || null,
-                collection: validatedData.collection || null,
-                region_representation: validatedData.region_representation || null,
-                location: validatedData.location || null,
-                campaign: validatedData.campaign || null,
+                storage_path: updatedStoragePath,
+                preview_path: updatedPreviewPath,
+                llm_description,
+                tags,
+                usage_rights: metadata.usage_rights || existingAsset.usage_rights,
+                status: metadata.status || existingAsset.status,
+                image_purchase_date:
+                    metadata.image_purchase_date || existingAsset.image_purchase_date,
+                image_capture_date:
+                    metadata.image_capture_date || existingAsset.image_capture_date,
+                license_type_usage:
+                    metadata.license_type_usage || existingAsset.license_type_usage,
+                license_type_subscription:
+                    metadata.license_type_subscription ||
+                    existingAsset.license_type_subscription,
+                dam_id: metadata.dam_id || existingAsset.dam_id,
+                url: metadata.url || existingAsset.url,
+                file_name: metadata.file_name || existingAsset.file_name,
+                acquired_at: metadata.acquired_at || existingAsset.acquired_at,
+                partner: metadata.partner || existingAsset.partner,
+                client: metadata.client || existingAsset.client,
+                brand: metadata.brand || existingAsset.brand,
+                collection: metadata.collection || existingAsset.collection,
+                region_representation:
+                    metadata.region_representation || existingAsset.region_representation,
+                location: metadata.location || existingAsset.location,
+                campaign: metadata.campaign || existingAsset.campaign,
             })
             .eq('id', id)
             .select()
@@ -112,13 +211,9 @@ export async function PATCH(
         console.error('Error in PATCH /api/admin/assets/[id]:', error)
 
         if (error.message === 'Admin access required') {
-            return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
-        }
-
-        if (error.name === 'ZodError') {
             return NextResponse.json(
-                { error: 'Invalid request data', details: error.errors },
-                { status: 400 }
+                { error: 'Admin access required' },
+                { status: 403 }
             )
         }
 
@@ -190,18 +285,28 @@ export async function DELETE(
         }
 
         // Delete from Supabase storage
-        await supabaseAdmin.storage.from('assets-full').remove([asset.storage_path])
-        await supabaseAdmin.storage.from('assets-preview').remove([asset.preview_path])
+        await supabaseAdmin.storage
+            .from('assets-full')
+            .remove([asset.storage_path])
+        await supabaseAdmin.storage
+            .from('assets-preview')
+            .remove([asset.preview_path])
 
         // Delete from Pinecone
         await deleteVector(id)
 
-        return NextResponse.json({ success: true, message: 'Asset deleted successfully' })
+        return NextResponse.json({
+            success: true,
+            message: 'Asset deleted successfully',
+        })
     } catch (error: any) {
         console.error('Error in DELETE /api/admin/assets/[id]:', error)
 
         if (error.message === 'Admin access required') {
-            return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
+            return NextResponse.json(
+                { error: 'Admin access required' },
+                { status: 403 }
+            )
         }
 
         return NextResponse.json(
