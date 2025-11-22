@@ -9,7 +9,13 @@ import { ThinkingIndicator } from '@/components/thinking-indicator'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { LogOut, Trash2, Send } from 'lucide-react'
+import {
+  LogOut,
+  Trash2,
+  Send,
+  X, // Added X icon
+  Camera, // Added Camera icon
+} from 'lucide-react'
 
 export default function ChatPage() {
   const router = useRouter()
@@ -18,7 +24,7 @@ export default function ChatPage() {
 
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [inputValue, setInputValue] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(false) // Keep isLoading for button disable
   const [isThinking, setIsThinking] = useState(false)
   const [statusMessage, setStatusMessage] = useState('')
   const [userRole, setUserRole] = useState<'admin' | 'user' | null>(null)
@@ -98,6 +104,34 @@ export default function ChatPage() {
     setShowConfirmDialog(true)
   }
 
+  // Image Upload
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [selectedImage, setSelectedImage] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+
+  function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        alert('File too large. Maximum size is 10MB.')
+        return
+      }
+      setSelectedImage(file)
+      setImagePreview(URL.createObjectURL(file))
+    }
+  }
+
+  function removeImage() {
+    if (imagePreview) {
+      URL.revokeObjectURL(imagePreview)
+    }
+    setSelectedImage(null)
+    setImagePreview(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
+
   async function confirmClearHistory() {
     // Close the dialog
     setShowConfirmDialog(false)
@@ -144,13 +178,30 @@ export default function ChatPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
 
-    if (!inputValue.trim() || isLoading) return
+    if ((!inputValue.trim() && !selectedImage) || isLoading) return
 
-    const userMessage = inputValue.trim()
+    // Add user message immediately
+    const userMessage: ChatMessage = {
+      id: crypto.randomUUID(),
+      user_id: '', // Will be filled by backend
+      role: 'user',
+      content: inputValue,
+      image: imagePreview || undefined,
+      created_at: new Date().toISOString(),
+    }
+
+    setMessages((prev) => [...prev, userMessage])
     setInputValue('')
     setIsLoading(true)
     setIsThinking(true)
-    setStatusMessage('Sending message...')
+    setStatusMessage('Analyzing your query...')
+
+    // Clear image state but keep preview URL for the message
+    setSelectedImage(null)
+    setImagePreview(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
 
     try {
       const {
@@ -162,83 +213,104 @@ export default function ChatPage() {
         return
       }
 
-      // Optimistically add user message
-      const optimisticUserMessage: ChatMessage = {
-        id: crypto.randomUUID(),
-        user_id: session.user.id,
-        role: 'user',
-        content: userMessage,
-        created_at: new Date().toISOString(),
-      }
+      // Handle Image Upload vs Text Query
+      if (selectedImage) {
+        const formData = new FormData()
+        formData.append('image', selectedImage)
+        if (inputValue.trim()) {
+          formData.append('query', inputValue)
+        }
 
-      setMessages((prev) => [...prev, optimisticUserMessage])
+        const response = await fetch('/api/chat/analyze-image', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: formData,
+        })
 
-      // Call chat API with EventSource-like handling
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({
-          messages: [...messages, { role: 'user', content: userMessage }],
-        }),
-      })
+        if (!response.ok) {
+          throw new Error('Failed to analyze image')
+        }
 
-      if (!response.ok) {
-        throw new Error('Failed to send message')
-      }
+        const data = await response.json()
 
-      const reader = response.body?.getReader()
-      const decoder = new TextDecoder()
+        const assistantMessage: ChatMessage = {
+          id: crypto.randomUUID(),
+          user_id: session.user.id,
+          role: 'assistant',
+          content: data.assistant_message,
+          assets: data.assets,
+          created_at: new Date().toISOString(),
+        }
 
-      if (!reader) {
-        throw new Error('No response body')
-      }
+        setMessages((prev) => [...prev, assistantMessage])
+      } else {
+        // Standard Text Chat (SSE)
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            messages: [...messages, userMessage],
+          }),
+        })
 
-      let assistantMessage = ''
-      let assets: BrandonAsset[] = []
+        if (!response.ok) {
+          throw new Error('Failed to send message')
+        }
 
-      while (true) {
-        const { done, value } = await reader.read()
+        const reader = response.body?.getReader()
+        if (!reader) {
+          throw new Error('No response body')
+        }
 
-        if (done) break
+        const decoder = new TextDecoder()
+        let assistantMessageContent = ''
+        let assistantAssets: BrandonAsset[] = []
 
-        const chunk = decoder.decode(value)
-        const lines = chunk.split('\n\n')
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
 
-        for (const line of lines) {
-          if (!line.trim() || !line.startsWith('data: ')) continue
+          const chunk = decoder.decode(value)
+          const lines = chunk.split('\n\n')
 
-          try {
-            const data = JSON.parse(line.slice(6))
+          for (const line of lines) {
+            if (!line.trim() || !line.startsWith('data: ')) continue
 
-            if (data.type === 'status') {
-              setStatusMessage(data.data.status)
-            } else if (data.type === 'result') {
-              assistantMessage = data.data.assistant_message
-              assets = data.data.assets || []
-              setIsThinking(false)
-            } else if (data.type === 'error') {
-              throw new Error(data.data.error)
+            try {
+              const data = JSON.parse(line.slice(6))
+
+              if (data.type === 'status') {
+                setStatusMessage(data.data.status)
+              } else if (data.type === 'result') {
+                assistantMessageContent = data.data.assistant_message
+                assistantAssets = data.data.assets || []
+              } else if (data.type === 'error') {
+                throw new Error(data.data.error)
+              }
+            } catch (parseError) {
+              console.error('Error parsing SSE data:', parseError)
             }
-          } catch (parseError) {
-            console.error('Error parsing SSE data:', parseError)
           }
         }
-      }
 
-      // Add assistant message to UI
-      const assistantMessageObj: ChatMessage = {
-        id: crypto.randomUUID(),
-        user_id: session.user.id,
-        role: 'assistant',
-        content: assistantMessage,
-        assets,
-        created_at: new Date().toISOString(),
+        // Add assistant message to UI after stream completes
+        if (assistantMessageContent) {
+          const assistantMessageObj: ChatMessage = {
+            id: crypto.randomUUID(),
+            user_id: session.user.id,
+            role: 'assistant',
+            content: assistantMessageContent,
+            assets: assistantAssets,
+            created_at: new Date().toISOString(),
+          }
+          setMessages((prev) => [...prev, assistantMessageObj])
+        }
       }
-
-      setMessages((prev) => [...prev, assistantMessageObj])
     } catch (error: any) {
       console.error('Error sending message:', error)
       alert(error.message || 'Failed to send message. Please try again.')
@@ -316,8 +388,19 @@ export default function ChatPage() {
             <div key={message.id} className="mb-6">
               {message.role === 'user' ? (
                 <div className="flex justify-end">
-                  <div className="bg-primary text-primary-foreground rounded-lg px-4 py-2 max-w-2xl">
-                    {message.content}
+                  <div className="flex flex-col items-end gap-2 max-w-2xl">
+                    {message.image && (
+                      <div className="rounded-lg overflow-hidden border bg-muted max-w-[200px]">
+                        <img
+                          src={message.image}
+                          alt="User upload"
+                          className="w-full h-auto"
+                        />
+                      </div>
+                    )}
+                    <div className="bg-primary text-primary-foreground rounded-lg px-4 py-2">
+                      {message.content || (message.image ? 'Sent an image' : '')}
+                    </div>
                   </div>
                 </div>
               ) : (
@@ -346,23 +429,59 @@ export default function ChatPage() {
       {/* Input */}
       <div className="border-t bg-card">
         <div className="container mx-auto px-4 py-4 max-w-4xl">
-          <form onSubmit={handleSubmit} className="flex gap-2">
-            <Textarea
-              placeholder="Ask me to find brand assets..."
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault()
-                  handleSubmit(e)
-                }
-              }}
-              disabled={isLoading}
-              className="min-h-[60px] resize-none"
-            />
-            <Button type="submit" disabled={isLoading || !inputValue.trim()}>
-              <Send className="h-4 w-4" />
-            </Button>
+          <form onSubmit={handleSubmit} className="flex flex-col gap-2 w-full">
+            {imagePreview && (
+              <div className="relative w-fit">
+                <div className="rounded-lg overflow-hidden border bg-muted h-20 w-20">
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={removeImage}
+                  className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 hover:bg-destructive/90 shadow-sm"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            )}
+            <div className="flex gap-2">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageSelect}
+                className="hidden"
+                ref={fileInputRef}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isLoading}
+              >
+                <Camera className="h-4 w-4" />
+              </Button>
+              <Textarea
+                placeholder="Ask me to find brand assets..."
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault()
+                    handleSubmit(e)
+                  }
+                }}
+                disabled={isLoading}
+                className="min-h-[60px] resize-none"
+              />
+              <Button type="submit" disabled={isLoading || (!inputValue.trim() && !selectedImage)}>
+                <Send className="h-4 w-4" />
+              </Button>
+            </div>
           </form>
         </div>
       </div>

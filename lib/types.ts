@@ -130,6 +130,7 @@ export const ChatMessageSchema = z.object({
   user_id: z.string().uuid(),
   role: ChatMessageRoleSchema,
   content: z.string(),
+  image: z.string().optional(),
   assets: z.array(BrandonAssetSchema).optional().nullable(),
   created_at: z.string(),
 })
