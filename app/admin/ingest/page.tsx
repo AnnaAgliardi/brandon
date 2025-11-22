@@ -260,6 +260,11 @@ export default function BulkIngestPage() {
         location: metadata.location || null,
         partner: metadata.partner || null,
         client: metadata.client || null,
+        collection: metadata.collection || null,
+        dam_id: metadata.dam_id || null,
+        file_name: metadata.file_name || null,
+        url: metadata.url || null,
+        acquired_at: metadata.acquired_at || null,
       }
 
       console.log('Ingest payload:', JSON.stringify(ingestPayload, null, 2))
@@ -378,6 +383,7 @@ export default function BulkIngestPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
+              {/* Basic Info */}
               <div>
                 <Label>Brand</Label>
                 <Input
@@ -385,7 +391,7 @@ export default function BulkIngestPage() {
                   onChange={(e) =>
                     setSharedMetadata({ ...sharedMetadata, brand: e.target.value })
                   }
-                  placeholder="Enter brand name"
+                  placeholder="Brand name"
                 />
               </div>
 
@@ -408,6 +414,7 @@ export default function BulkIngestPage() {
                 </Select>
               </div>
 
+              {/* Location Info */}
               <div>
                 <Label>Region</Label>
                 <Select
@@ -431,16 +438,186 @@ export default function BulkIngestPage() {
               </div>
 
               <div>
+                <Label>Location</Label>
+                <Input
+                  value={sharedMetadata.location || ''}
+                  onChange={(e) =>
+                    setSharedMetadata({ ...sharedMetadata, location: e.target.value })
+                  }
+                  placeholder="City, Country"
+                />
+              </div>
+
+              {/* Campaign & Collection */}
+              <div>
                 <Label>Campaign</Label>
                 <Input
                   value={sharedMetadata.campaign || ''}
                   onChange={(e) =>
-                    setSharedMetadata({
-                      ...sharedMetadata,
-                      campaign: e.target.value,
-                    })
+                    setSharedMetadata({ ...sharedMetadata, campaign: e.target.value })
                   }
                   placeholder="Campaign name"
+                />
+              </div>
+
+              <div>
+                <Label>Collection</Label>
+                <Input
+                  value={sharedMetadata.collection || ''}
+                  onChange={(e) =>
+                    setSharedMetadata({ ...sharedMetadata, collection: e.target.value })
+                  }
+                  placeholder="Collection name"
+                />
+              </div>
+
+              {/* Partners & Clients */}
+              <div>
+                <Label>Partner</Label>
+                <Input
+                  value={sharedMetadata.partner || ''}
+                  onChange={(e) =>
+                    setSharedMetadata({ ...sharedMetadata, partner: e.target.value })
+                  }
+                  placeholder="Partner name"
+                />
+              </div>
+
+              <div>
+                <Label>Client</Label>
+                <Input
+                  value={sharedMetadata.client || ''}
+                  onChange={(e) =>
+                    setSharedMetadata({ ...sharedMetadata, client: e.target.value })
+                  }
+                  placeholder="Client name"
+                />
+              </div>
+
+              {/* IDs & References */}
+              <div>
+                <Label>DAM ID</Label>
+                <Input
+                  value={sharedMetadata.dam_id || ''}
+                  onChange={(e) =>
+                    setSharedMetadata({ ...sharedMetadata, dam_id: e.target.value })
+                  }
+                  placeholder="Digital Asset Management ID"
+                />
+              </div>
+
+              <div>
+                <Label>File Name</Label>
+                <Input
+                  value={sharedMetadata.file_name || ''}
+                  onChange={(e) =>
+                    setSharedMetadata({ ...sharedMetadata, file_name: e.target.value })
+                  }
+                  placeholder="Original filename"
+                />
+              </div>
+
+              {/* URL */}
+              <div className="col-span-2">
+                <Label>Source URL</Label>
+                <Input
+                  value={sharedMetadata.url || ''}
+                  onChange={(e) =>
+                    setSharedMetadata({ ...sharedMetadata, url: e.target.value })
+                  }
+                  placeholder="https://..."
+                />
+              </div>
+
+              {/* Usage Rights */}
+              <div>
+                <Label>Usage Rights</Label>
+                <Select
+                  value={sharedMetadata.usage_rights || 'internal_only'}
+                  onValueChange={(value: any) =>
+                    setSharedMetadata({ ...sharedMetadata, usage_rights: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="internal_only">Internal Only</SelectItem>
+                    <SelectItem value="external_allowed">External Allowed</SelectItem>
+                    <SelectItem value="public">Public</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* License Types */}
+              <div>
+                <Label>License Type (Usage)</Label>
+                <Input
+                  value={sharedMetadata.license_type_usage || 'Creative'}
+                  onChange={(e) =>
+                    setSharedMetadata({
+                      ...sharedMetadata,
+                      license_type_usage: e.target.value,
+                    })
+                  }
+                  placeholder="e.g., Creative"
+                />
+              </div>
+
+              <div>
+                <Label>License Type (Subscription)</Label>
+                <Input
+                  value={sharedMetadata.license_type_subscription || 'Standard'}
+                  onChange={(e) =>
+                    setSharedMetadata({
+                      ...sharedMetadata,
+                      license_type_subscription: e.target.value,
+                    })
+                  }
+                  placeholder="e.g., Standard"
+                />
+              </div>
+
+              {/* Dates */}
+              <div>
+                <Label>Image Purchase Date</Label>
+                <Input
+                  type="date"
+                  value={sharedMetadata.image_purchase_date || ''}
+                  onChange={(e) =>
+                    setSharedMetadata({
+                      ...sharedMetadata,
+                      image_purchase_date: e.target.value,
+                    })
+                  }
+                />
+              </div>
+
+              <div>
+                <Label>Image Capture Date</Label>
+                <Input
+                  type="date"
+                  value={sharedMetadata.image_capture_date || ''}
+                  onChange={(e) =>
+                    setSharedMetadata({
+                      ...sharedMetadata,
+                      image_capture_date: e.target.value,
+                    })
+                  }
+                />
+              </div>
+
+              <div>
+                <Label>Acquired At</Label>
+                <Input
+                  type="date"
+                  value={sharedMetadata.acquired_at || ''}
+                  onChange={(e) =>
+                    setSharedMetadata({
+                      ...sharedMetadata,
+                      acquired_at: e.target.value,
+                    })
+                  }
                 />
               </div>
             </div>
