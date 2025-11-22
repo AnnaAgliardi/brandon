@@ -22,6 +22,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog'
 import { ConfirmDialog } from '@/components/confirm-dialog'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
     ArrowLeft,
     Loader2,
@@ -72,6 +73,12 @@ export default function AssetsManagerPage() {
     // Delete
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
     const [deletingId, setDeletingId] = useState<string | null>(null)
+
+    // Bulk Selection
+    const [selectedIds, setSelectedIds] = useState<string[]>([])
+    const [bulkAction, setBulkAction] = useState<string>('')
+    const [bulkValue, setBulkValue] = useState<string>('')
+    const [isBulkUpdating, setIsBulkUpdating] = useState(false)
 
     useEffect(() => {
         loadAssets()
@@ -208,6 +215,62 @@ export default function AssetsManagerPage() {
         }
     }
 
+    // Bulk Selection Handlers
+    function toggleSelectAsset(id: string) {
+        setSelectedIds((prev) =>
+            prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+        )
+    }
+
+    function toggleSelectAll() {
+        if (selectedIds.length === assets.length) {
+            setSelectedIds([])
+        } else {
+            setSelectedIds(assets.map((a) => a.id))
+        }
+    }
+
+    async function handleBulkUpdate() {
+        if (!bulkAction || !bulkValue || selectedIds.length === 0) return
+
+        setIsBulkUpdating(true)
+        try {
+            const {
+                data: { session },
+            } = await supabase.auth.getSession()
+            if (!session) throw new Error('Not authenticated')
+
+            // Build update payload
+            const updates: any = {}
+            updates[bulkAction] = bulkValue
+
+            // Update each selected asset
+            const promises = selectedIds.map(async (id) => {
+                const formData = new FormData()
+                Object.entries(updates).forEach(([key, value]) => {
+                    formData.append(key, value as string)
+                })
+
+                return fetch(`/api/admin/assets/${id}`, {
+                    method: 'PATCH',
+                    headers: { Authorization: `Bearer ${session.access_token}` },
+                    body: formData,
+                })
+            })
+
+            await Promise.all(promises)
+
+            await loadAssets()
+            setSelectedIds([])
+            setBulkAction('')
+            setBulkValue('')
+        } catch (err: any) {
+            setError(err.message)
+        } finally {
+            setIsBulkUpdating(false)
+        }
+    }
+
     const getPreviewUrl = (path: string) =>
         `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/assets-preview/${path}`
 
@@ -295,6 +358,80 @@ export default function AssetsManagerPage() {
                     </div>
                 </div>
 
+                {/* Bulk Actions Toolbar */}
+                {selectedIds.length > 0 && (
+                    <div className="mb-6 p-4 bg-secondary/10 border rounded-lg">
+                        <div className="flex items-center gap-4">
+                            <span className="text-sm font-medium">
+                                {selectedIds.length} selected
+                            </span>
+                            <Select value={bulkAction} onValueChange={setBulkAction}>
+                                <SelectTrigger className="w-48">
+                                    <SelectValue placeholder="Choose action" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="status">Change Status</SelectItem>
+                                    <SelectItem value="brand">Change Brand</SelectItem>
+                                    <SelectItem value="region_representation">Change Region</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            {bulkAction === 'status' && (
+                                <Select value={bulkValue} onValueChange={setBulkValue}>
+                                    <SelectTrigger className="w-40">
+                                        <SelectValue placeholder="Status" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="draft">Draft</SelectItem>
+                                        <SelectItem value="approved">Approved</SelectItem>
+                                        <SelectItem value="archived">Archived</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            )}
+                            {bulkAction === 'region_representation' && (
+                                <Select value={bulkValue} onValueChange={setBulkValue}>
+                                    <SelectTrigger className="w-40">
+                                        <SelectValue placeholder="Region" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="AMER">AMER</SelectItem>
+                                        <SelectItem value="EMEA">EMEA</SelectItem>
+                                        <SelectItem value="APAC">APAC</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            )}
+                            {bulkAction === 'brand' && (
+                                <Input
+                                    placeholder="Enter brand name"
+                                    value={bulkValue}
+                                    onChange={(e) => setBulkValue(e.target.value)}
+                                    className="w-48"
+                                />
+                            )}
+                            <Button
+                                onClick={handleBulkUpdate}
+                                disabled={!bulkAction || !bulkValue || isBulkUpdating}
+                                size="sm"
+                            >
+                                {isBulkUpdating ? (
+                                    <>
+                                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                        Updating...
+                                    </>
+                                ) : (
+                                    'Apply'
+                                )}
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setSelectedIds([])}
+                            >
+                                Clear
+                            </Button>
+                        </div>
+                    </div>
+                )}
+
                 {/* Assets Grid */}
                 {loading ? (
                     <div className="flex justify-center py-12">
@@ -305,48 +442,67 @@ export default function AssetsManagerPage() {
                         No assets found. Upload assets from the Ingest page.
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {assets.map((asset) => (
-                            <div
-                                key={asset.id}
-                                className="border rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
-                                onClick={() => handleAssetClick(asset)}
-                            >
-                                <img
-                                    src={getPreviewUrl(asset.preview_path)}
-                                    alt="Asset preview"
-                                    className="w-full h-48 object-cover"
-                                />
-                                <div className="p-4">
-                                    <p className="text-sm line-clamp-3 mb-3">
-                                        {asset.llm_description}
-                                    </p>
-                                    <div className="flex flex-wrap gap-2 text-xs">
-                                        {asset.brand && (
-                                            <span className="bg-secondary px-2 py-1 rounded">
-                                                {asset.brand}
-                                            </span>
-                                        )}
-                                        <span
-                                            className={`px-2 py-1 rounded ${asset.status === 'approved'
-                                                ? 'bg-green-100 text-green-800'
-                                                : asset.status === 'draft'
-                                                    ? 'bg-yellow-100 text-yellow-800'
-                                                    : 'bg-gray-100 text-gray-800'
-                                                }`}
-                                        >
-                                            {asset.status}
-                                        </span>
-                                        {asset.region_representation && (
-                                            <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                                                {asset.region_representation}
-                                            </span>
-                                        )}
+                    <>
+                        <div className="mb-4 flex items-center gap-2">
+                            <Checkbox
+                                checked={selectedIds.length === assets.length && assets.length > 0}
+                                onCheckedChange={toggleSelectAll}
+                            />
+                            <span className="text-sm">
+                                Select All ({assets.length})
+                            </span>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                            {assets.map((asset) => (
+                                <div key={asset.id} className="border rounded-lg overflow-hidden hover:shadow-lg transition-shadow relative">
+                                    <div className="absolute top-2 left-2 z-10">
+                                        <Checkbox
+                                            checked={selectedIds.includes(asset.id)}
+                                            onCheckedChange={() => toggleSelectAsset(asset.id)}
+                                            onClick={(e) => e.stopPropagation()}
+                                        />
+                                    </div>
+                                    <div
+                                        className="cursor-pointer"
+                                        onClick={() => handleAssetClick(asset)}
+                                    >
+                                        <img
+                                            src={getPreviewUrl(asset.preview_path)}
+                                            alt="Asset preview"
+                                            className="w-full h-48 object-cover"
+                                        />
+                                        <div className="p-4">
+                                            <p className="text-sm line-clamp-3 mb-3">
+                                                {asset.llm_description}
+                                            </p>
+                                            <div className="flex flex-wrap gap-2 text-xs">
+                                                {asset.brand && (
+                                                    <span className="bg-secondary px-2 py-1 rounded">
+                                                        {asset.brand}
+                                                    </span>
+                                                )}
+                                                <span
+                                                    className={`px-2 py-1 rounded ${asset.status === 'approved'
+                                                        ? 'bg-green-100 text-green-800'
+                                                        : asset.status === 'draft'
+                                                            ? 'bg-yellow-100 text-yellow-800'
+                                                            : 'bg-gray-100 text-gray-800'
+                                                        }`}
+                                                >
+                                                    {asset.status}
+                                                </span>
+                                                {asset.region_representation && (
+                                                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                                        {asset.region_representation}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
-                    </div>
+                            ))}
+                        </div>
+                    </>
                 )}
             </div>
 
