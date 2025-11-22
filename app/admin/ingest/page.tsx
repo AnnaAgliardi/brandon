@@ -1,12 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase-browser'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
   SelectContent,
@@ -14,76 +13,217 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { AssetMetadata, GeneratedAssetData, UsageRights, AssetStatus } from '@/lib/types'
-import { ArrowLeft, Upload, Loader2, CheckCircle } from 'lucide-react'
+import { Progress } from '@/components/ui/progress'
+import {
+  ArrowLeft,
+  Upload as UploadIcon,
+  X,
+  CheckCircle,
+  AlertCircle,
+  Loader2,
+  Link as LinkIcon,
+  Image as ImageIcon,
+} from 'lucide-react'
+import type { AssetMetadata } from '@/lib/types'
 
-export default function IngestPage() {
+interface FileItem {
+  id: string
+  file?: File
+  url?: string
+  preview: string
+  name: string
+  status: 'pending' | 'uploading' | 'success' | 'error'
+  progress: number
+  error?: string
+  metadata: Partial<AssetMetadata>
+}
+
+const MAX_FILES = 20
+const MAX_FILE_SIZE = 50 * 1024 * 1024 // 50MB
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+
+export default function BulkIngestPage() {
   const router = useRouter()
   const supabase = createClient()
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const [step, setStep] = useState<'upload' | 'review'>('upload')
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null)
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [files, setFiles] = useState<FileItem[]>([])
+  const [isDragging, setIsDragging] = useState(false)
+  const [urlInput, setUrlInput] = useState('')
+  const [isUploading, setIsUploading] = useState(false)
 
-  const [metadata, setMetadata] = useState<AssetMetadata>({
+  // Shared metadata
+  const [sharedMetadata, setSharedMetadata] = useState<Partial<AssetMetadata>>({
     usage_rights: 'internal_only',
     status: 'draft',
-    image_purchase_date: new Date().toISOString().split('T')[0],
-    image_capture_date: new Date().toISOString().split('T')[0],
-    license_type_usage: '',
-    license_type_subscription: '',
+    license_type_usage: 'Creative',
+    license_type_subscription: 'Standard',
   })
 
-  const [generatedData, setGeneratedData] = useState<GeneratedAssetData | null>(null)
-  const [editedDescription, setEditedDescription] = useState('')
-  const [editedMetadata, setEditedMetadata] = useState('')
-
-  const [isGenerating, setIsGenerating] = useState(false)
-  const [isIngesting, setIsIngesting] = useState(false)
-  const [isSuccess, setIsSuccess] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const [showOptionalFields, setShowOptionalFields] = useState(false)
-
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (file) {
-      setUploadedFile(file)
-      setPreviewUrl(URL.createObjectURL(file))
-      setError(null)
-    }
+  function generateId() {
+    return Math.random().toString(36).substr(2, 9)
   }
 
-  async function handleGenerate() {
-    if (!uploadedFile) {
-      setError('Please select an image file')
+  function validateFile(file: File): string | null {
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      return 'Invalid file type. Only JPG, PNG, GIF, and WebP are allowed.'
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      return 'File too large. Maximum size is 50MB.'
+    }
+    return null
+  }
+
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const selectedFiles = Array.from(e.target.files || [])
+    addFiles(selectedFiles)
+  }
+
+  function addFiles(selectedFiles: File[]) {
+    if (files.length + selectedFiles.length > MAX_FILES) {
+      alert(`Maximum ${MAX_FILES} files allowed`)
       return
     }
 
-    if (!metadata.license_type_usage || !metadata.license_type_subscription) {
-      setError('Please fill in all required fields')
+    const newFiles: FileItem[] = []
+
+    selectedFiles.forEach((file) => {
+      const error = validateFile(file)
+      if (error) {
+        alert(`${file.name}: ${error}`)
+        return
+      }
+
+      const preview = URL.createObjectURL(file)
+      newFiles.push({
+        id: generateId(),
+        file,
+        preview,
+        name: file.name,
+        status: 'pending',
+        progress: 0,
+        metadata: {},
+      })
+    })
+
+    setFiles((prev) => [...prev, ...newFiles])
+  }
+
+  function handleDragOver(e: React.DragEvent) {
+    e.preventDefault()
+    setIsDragging(true)
+  }
+
+  function handleDragLeave(e: React.DragEvent) {
+    e.preventDefault()
+    setIsDragging(false)
+  }
+
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault()
+    setIsDragging(false)
+
+    const droppedFiles = Array.from(e.dataTransfer.files)
+    addFiles(droppedFiles)
+  }
+
+  async function handleAddUrl() {
+    if (!urlInput.trim()) return
+
+    if (files.length >= MAX_FILES) {
+      alert(`Maximum ${MAX_FILES} files allowed`)
       return
     }
 
-    setIsGenerating(true)
-    setError(null)
+    const newFile: FileItem = {
+      id: generateId(),
+      url: urlInput,
+      preview: urlInput,
+      name: urlInput.split('/').pop() || 'URL Import',
+      status: 'pending',
+      progress: 0,
+      metadata: {},
+    }
+
+    setFiles((prev) => [...prev, newFile])
+    setUrlInput('')
+  }
+
+  function removeFile(id: string) {
+    setFiles((prev) => {
+      const file = prev.find((f) => f.id === id)
+      if (file?.preview && file.file) {
+        URL.revokeObjectURL(file.preview)
+      }
+      return prev.filter((f) => f.id !== id)
+    })
+  }
+
+  function applySharedMetadata() {
+    setFiles((prev) =>
+      prev.map((f) => ({
+        ...f,
+        metadata: { ...sharedMetadata },
+      }))
+    )
+  }
+
+  async function uploadAll() {
+    if (files.length === 0) {
+      alert('No files to upload')
+      return
+    }
+
+    setIsUploading(true)
+
+    for (const fileItem of files) {
+      if (fileItem.status === 'success') continue
+
+      try {
+        await uploadSingle(fileItem)
+      } catch (error) {
+        console.error('Upload error:', error)
+      }
+    }
+
+    setIsUploading(false)
+  }
+
+  async function uploadSingle(fileItem: FileItem) {
+    // Update status
+    setFiles((prev) =>
+      prev.map((f) =>
+        f.id === fileItem.id ? { ...f, status: 'uploading', progress: 0 } : f
+      )
+    )
 
     try {
       const {
         data: { session },
       } = await supabase.auth.getSession()
-
       if (!session) {
-        router.push('/login')
-        return
+        throw new Error('Not authenticated')
       }
 
       const formData = new FormData()
-      formData.append('image', uploadedFile)
-      formData.append('metadata', JSON.stringify(metadata))
 
-      const response = await fetch('/api/admin/generate-description', {
+      // Add file or URL
+      if (fileItem.file) {
+        formData.append('file', fileItem.file)
+      } else if (fileItem.url) {
+        formData.append('url', fileItem.url)
+      }
+
+      // Add metadata
+      const metadata = { ...sharedMetadata, ...fileItem.metadata }
+      Object.entries(metadata).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          formData.append(key, value.toString())
+        }
+      })
+
+      // Upload with progress
+      const res = await fetch('/api/admin/ingest', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${session.access_token}`,
@@ -91,103 +231,38 @@ export default function IngestPage() {
         body: formData,
       })
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to generate description')
+      if (!res.ok) {
+        const errorData = await res.json()
+        throw new Error(errorData.error || 'Upload failed')
       }
 
-      const data: GeneratedAssetData = await response.json()
-      setGeneratedData(data)
-      setEditedDescription(data.llm_description)
-      setEditedMetadata(JSON.stringify(data.llm_metadata, null, 2))
-      setStep('review')
+      // Success
+      setFiles((prev) =>
+        prev.map((f) =>
+          f.id === fileItem.id
+            ? { ...f, status: 'success', progress: 100 }
+            : f
+        )
+      )
     } catch (error: any) {
-      setError(error.message || 'Failed to generate description')
-      console.error('Generation error:', error)
-    } finally {
-      setIsGenerating(false)
+      // Error
+      setFiles((prev) =>
+        prev.map((f) =>
+          f.id === fileItem.id
+            ? { ...f, status: 'error', error: error.message }
+            : f
+        )
+      )
     }
   }
 
-  async function handleIngest() {
-    if (!generatedData) return
-
-    setIsIngesting(true)
-    setError(null)
-
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-
-      if (!session) {
-        router.push('/login')
-        return
-      }
-
-      // Parse edited metadata
-      let parsedMetadata
-      try {
-        parsedMetadata = JSON.parse(editedMetadata)
-      } catch {
-        setError('Invalid JSON in metadata. Please fix and try again.')
-        setIsIngesting(false)
-        return
-      }
-
-      const ingestPayload = {
-        ...generatedData,
-        llm_description: editedDescription,
-        llm_metadata: parsedMetadata,
-        ...metadata,
-      }
-
-      const response = await fetch('/api/admin/ingest', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify(ingestPayload),
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to ingest asset')
-      }
-
-      const result = await response.json()
-      setIsSuccess(true)
-    } catch (error: any) {
-      setError(error.message || 'Failed to ingest asset')
-      console.error('Ingestion error:', error)
-    } finally {
-      setIsIngesting(false)
-    }
-  }
-
-  function resetForm() {
-    setStep('upload')
-    setUploadedFile(null)
-    setPreviewUrl(null)
-    setGeneratedData(null)
-    setEditedDescription('')
-    setEditedMetadata('')
-    setIsSuccess(false)
-    setError(null)
-    setMetadata({
-      usage_rights: 'internal_only',
-      status: 'draft',
-      image_purchase_date: new Date().toISOString().split('T')[0],
-      image_capture_date: new Date().toISOString().split('T')[0],
-      license_type_usage: '',
-      license_type_subscription: '',
-    })
-  }
+  const pendingCount = files.filter((f) => f.status === 'pending').length
+  const successCount = files.filter((f) => f.status === 'success').length
+  const errorCount = files.filter((f) => f.status === 'error').length
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
         <div className="mb-6">
           <Button variant="outline" onClick={() => router.push('/admin')}>
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -195,463 +270,259 @@ export default function IngestPage() {
           </Button>
         </div>
 
-        <h1 className="text-3xl font-bold mb-8">Asset Ingestion</h1>
+        <h1 className="text-3xl font-bold mb-2">Bulk Asset Ingestion</h1>
+        <p className="text-muted-foreground mb-8">
+          Upload up to {MAX_FILES} files with shared metadata
+        </p>
 
-        {error && (
-          <div className="mb-6 p-4 bg-destructive/10 text-destructive rounded-lg">
-            {error}
+        {/* Drag & Drop Zone */}
+        <div
+          className={`border-2 border-dashed rounded-lg p-12 mb-8 text-center transition-colors ${isDragging
+              ? 'border-primary bg-primary/5'
+              : 'border-muted-foreground/25'
+            }`}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+        >
+          <UploadIcon className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+          <h3 className="text-lg font-semibold mb-2">
+            Drag & drop files here
+          </h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            or click to browse (max {MAX_FILES} files, 50MB each)
+          </p>
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept="image/*"
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+          <Button onClick={() => fileInputRef.current?.click()}>
+            <UploadIcon className="h-4 w-4 mr-2" />
+            Select Files
+          </Button>
+        </div>
+
+        {/* URL Import */}
+        <div className="mb-8 flex gap-2">
+          <div className="flex-1">
+            <Label>Or import from URL</Label>
+            <div className="flex gap-2 mt-1">
+              <Input
+                placeholder="https://example.com/image.jpg"
+                value={urlInput}
+                onChange={(e) => setUrlInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleAddUrl()}
+              />
+              <Button onClick={handleAddUrl} variant="outline">
+                <LinkIcon className="h-4 w-4 mr-2" />
+                Add URL
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Shared Metadata */}
+        {files.length > 0 && (
+          <div className="mb-8 p-6 border rounded-lg">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Shared Metadata</h3>
+              <Button onClick={applySharedMetadata} size="sm">
+                Apply to All Files
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Brand</Label>
+                <Input
+                  value={sharedMetadata.brand || ''}
+                  onChange={(e) =>
+                    setSharedMetadata({ ...sharedMetadata, brand: e.target.value })
+                  }
+                  placeholder="Enter brand name"
+                />
+              </div>
+
+              <div>
+                <Label>Status</Label>
+                <Select
+                  value={sharedMetadata.status}
+                  onValueChange={(value: any) =>
+                    setSharedMetadata({ ...sharedMetadata, status: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="draft">Draft</SelectItem>
+                    <SelectItem value="approved">Approved</SelectItem>
+                    <SelectItem value="archived">Archived</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label>Region</Label>
+                <Select
+                  value={sharedMetadata.region_representation || undefined}
+                  onValueChange={(value) =>
+                    setSharedMetadata({
+                      ...sharedMetadata,
+                      region_representation: value,
+                    })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select region" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="AMER">AMER</SelectItem>
+                    <SelectItem value="EMEA">EMEA</SelectItem>
+                    <SelectItem value="APAC">APAC</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label>Campaign</Label>
+                <Input
+                  value={sharedMetadata.campaign || ''}
+                  onChange={(e) =>
+                    setSharedMetadata({
+                      ...sharedMetadata,
+                      campaign: e.target.value,
+                    })
+                  }
+                  placeholder="Campaign name"
+                />
+              </div>
+            </div>
           </div>
         )}
 
-        {isSuccess ? (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-green-600">
-                <CheckCircle className="h-5 w-5" />
-                Asset Ingested Successfully
-              </CardTitle>
-              <CardDescription>
-                The asset is now ready for search in Brandon
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex gap-4">
-              <Button onClick={() => router.push('/')}>View in Chat</Button>
-              <Button variant="outline" onClick={resetForm}>
-                Ingest Another Asset
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <>
-            {/* Step 1: Upload & Generate */}
-            {step === 'upload' && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Step 1: Upload & Generate Description</CardTitle>
-                  <CardDescription>
-                    Upload an image and provide metadata to generate an AI description
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {/* File Upload */}
-                  <div className="space-y-2">
-                    <Label htmlFor="image">Image File</Label>
-                    <div className="border-2 border-dashed rounded-lg p-8 text-center">
-                      {previewUrl ? (
-                        <div className="space-y-4">
-                          <img
-                            src={previewUrl}
-                            alt="Preview"
-                            className="max-h-64 mx-auto rounded"
-                          />
-                          <p className="text-sm text-muted-foreground">
-                            {uploadedFile?.name}
-                          </p>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setUploadedFile(null)
-                              setPreviewUrl(null)
-                            }}
-                          >
-                            Change Image
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="space-y-4">
-                          <Upload className="h-12 w-12 mx-auto text-muted-foreground" />
-                          <div>
-                            <Input
-                              id="image"
-                              type="file"
-                              accept="image/jpeg,image/png,image/webp"
-                              onChange={handleFileChange}
-                              className="hidden"
-                            />
-                            <Label
-                              htmlFor="image"
-                              className="cursor-pointer text-primary hover:underline"
-                            >
-                              Click to upload
-                            </Label>
-                            <p className="text-sm text-muted-foreground mt-2">
-                              JPEG, PNG, or WebP (max 10MB)
-                            </p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+        {/* File Grid */}
+        {files.length > 0 && (
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">
+                Files ({files.length}/{MAX_FILES})
+              </h3>
+              {!isUploading && pendingCount > 0 && (
+                <Button onClick={uploadAll}>
+                  <UploadIcon className="h-4 w-4 mr-2" />
+                  Upload All ({pendingCount})
+                </Button>
+              )}
+            </div>
 
-                  {/* Required Metadata */}
-                  <div className="space-y-4">
-                    <h3 className="font-semibold">Required Metadata</h3>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="usage_rights">Usage Rights</Label>
-                        <Select
-                          value={metadata.usage_rights}
-                          onValueChange={(value: any) =>
-                            setMetadata({ ...metadata, usage_rights: value })
-                          }
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="internal_only">Internal Only</SelectItem>
-                            <SelectItem value="web_approved">Web Approved</SelectItem>
-                            <SelectItem value="print_approved">Print Approved</SelectItem>
-                            <SelectItem value="all_channels">All Channels</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="status">Status</Label>
-                        <Select
-                          value={metadata.status}
-                          onValueChange={(value: any) =>
-                            setMetadata({ ...metadata, status: value })
-                          }
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="draft">Draft</SelectItem>
-                            <SelectItem value="approved">Approved</SelectItem>
-                            <SelectItem value="archived">Archived</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="purchase_date">Image Purchase Date</Label>
-                        <Input
-                          type="date"
-                          value={metadata.image_purchase_date}
-                          onChange={(e) =>
-                            setMetadata({
-                              ...metadata,
-                              image_purchase_date: e.target.value,
-                            })
-                          }
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="capture_date">Image Capture Date</Label>
-                        <Input
-                          type="date"
-                          value={metadata.image_capture_date}
-                          onChange={(e) =>
-                            setMetadata({
-                              ...metadata,
-                              image_capture_date: e.target.value,
-                            })
-                          }
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="license_usage">License Type (Usage)</Label>
-                        <Select
-                          value={metadata.license_type_usage}
-                          onValueChange={(value) =>
-                            setMetadata({
-                              ...metadata,
-                              license_type_usage: value,
-                            })
-                          }
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select license type" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Creative">Creative</SelectItem>
-                            <SelectItem value="Editorial">Editorial</SelectItem>
-                            <SelectItem value="Company">Company</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="license_subscription">
-                          License Type (Subscription)
-                        </Label>
-                        <Select
-                          value={metadata.license_type_subscription}
-                          onValueChange={(value) =>
-                            setMetadata({
-                              ...metadata,
-                              license_type_subscription: value,
-                            })
-                          }
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select subscription type" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Standard">Standard</SelectItem>
-                            <SelectItem value="Premium">Premium</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Optional Metadata */}
-                  <div className="space-y-4">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowOptionalFields(!showOptionalFields)}
-                    >
-                      {showOptionalFields ? 'Hide' : 'Show'} Optional Fields
-                    </Button>
-
-                    {showOptionalFields && (
-                      <div className="grid grid-cols-2 gap-4 pt-2">
-                        <div className="space-y-2">
-                          <Label htmlFor="dam_id">DAM ID</Label>
-                          <Input
-                            id="dam_id"
-                            placeholder="Optional"
-                            value={metadata.dam_id || ''}
-                            onChange={(e) =>
-                              setMetadata({ ...metadata, dam_id: e.target.value })
-                            }
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="url">URL (DAM Link)</Label>
-                          <Input
-                            id="url"
-                            type="url"
-                            placeholder="Optional"
-                            value={metadata.url || ''}
-                            onChange={(e) =>
-                              setMetadata({ ...metadata, url: e.target.value })
-                            }
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="file_name">File Name</Label>
-                          <Input
-                            id="file_name"
-                            placeholder="Optional"
-                            value={metadata.file_name || ''}
-                            onChange={(e) =>
-                              setMetadata({ ...metadata, file_name: e.target.value })
-                            }
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="partner">Partner</Label>
-                          <Input
-                            id="partner"
-                            placeholder="e.g., Getty Images"
-                            value={metadata.partner || ''}
-                            onChange={(e) =>
-                              setMetadata({ ...metadata, partner: e.target.value })
-                            }
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="client">Client</Label>
-                          <Input
-                            id="client"
-                            placeholder="e.g., Q4 Campaign"
-                            value={metadata.client || ''}
-                            onChange={(e) =>
-                              setMetadata({ ...metadata, client: e.target.value })
-                            }
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="brand">Brand</Label>
-                          <Input
-                            id="brand"
-                            placeholder="e.g., Audi"
-                            value={metadata.brand || ''}
-                            onChange={(e) =>
-                              setMetadata({ ...metadata, brand: e.target.value })
-                            }
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="collection">Collection</Label>
-                          <Input
-                            id="collection"
-                            placeholder="Collection name"
-                            value={metadata.collection || ''}
-                            onChange={(e) =>
-                              setMetadata({ ...metadata, collection: e.target.value })
-                            }
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="region">Region Representation</Label>
-                          <Select
-                            value={metadata.region_representation || ''}
-                            onValueChange={(value) =>
-                              setMetadata({
-                                ...metadata,
-                                region_representation: value,
-                              })
-                            }
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select region" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="AMER">AMER</SelectItem>
-                              <SelectItem value="EMEA">EMEA</SelectItem>
-                              <SelectItem value="APAC">APAC</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="location">Location</Label>
-                          <Input
-                            id="location"
-                            placeholder="e.g., Munich HQ"
-                            value={metadata.location || ''}
-                            onChange={(e) =>
-                              setMetadata({ ...metadata, location: e.target.value })
-                            }
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="campaign">Campaign</Label>
-                          <Input
-                            id="campaign"
-                            placeholder="e.g., EV Summer Launch"
-                            value={metadata.campaign || ''}
-                            onChange={(e) =>
-                              setMetadata({ ...metadata, campaign: e.target.value })
-                            }
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <Button
-                    onClick={handleGenerate}
-                    disabled={isGenerating || !uploadedFile}
-                    className="w-full"
-                  >
-                    {isGenerating ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Generating Description...
-                      </>
-                    ) : (
-                      'Generate Description'
-                    )}
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Step 2: Review & Ingest */}
-            {step === 'review' && generatedData && (
-              <div className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Step 2: Review & Ingest</CardTitle>
-                    <CardDescription>
-                      Review the generated description and metadata, then ingest the asset
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    {/* Preview Image */}
-                    <div className="flex justify-center">
-                      <img
-                        src={generatedData.preview_url}
-                        alt="Preview"
-                        className="max-h-64 rounded-lg"
-                      />
-                    </div>
-
-                    {/* LLM Description */}
-                    <div className="space-y-2">
-                      <Label htmlFor="description">Generated Description</Label>
-                      <Textarea
-                        id="description"
-                        value={editedDescription}
-                        onChange={(e) => setEditedDescription(e.target.value)}
-                        className="min-h-[100px]"
-                      />
-                    </div>
-
-                    {/* LLM Metadata JSON */}
-                    <div className="space-y-2">
-                      <Label htmlFor="metadata">Generated Metadata (JSON)</Label>
-                      <Textarea
-                        id="metadata"
-                        value={editedMetadata}
-                        onChange={(e) => setEditedMetadata(e.target.value)}
-                        className="min-h-[200px] font-mono text-xs"
-                      />
-                    </div>
-
-                    {/* Tags */}
-                    <div className="space-y-2">
-                      <Label>Extracted Tags</Label>
-                      <div className="flex flex-wrap gap-2">
-                        {generatedData.tags.map((tag, i) => (
-                          <span
-                            key={i}
-                            className="bg-secondary text-secondary-foreground px-2 py-1 rounded text-xs"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="flex gap-4">
-                      <Button
-                        onClick={handleIngest}
-                        disabled={isIngesting}
-                        className="flex-1"
-                      >
-                        {isIngesting ? (
-                          <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            Ingesting Asset...
-                          </>
-                        ) : (
-                          'Ingest Asset'
-                        )}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => setStep('upload')}
-                        disabled={isIngesting}
-                      >
-                        Back to Upload
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+            {/* Stats */}
+            {(successCount > 0 || errorCount > 0) && (
+              <div className="flex gap-4 mb-4 text-sm">
+                {successCount > 0 && (
+                  <span className="text-green-600">
+                    ✓ {successCount} successful
+                  </span>
+                )}
+                {errorCount > 0 && (
+                  <span className="text-destructive">✗ {errorCount} failed</span>
+                )}
               </div>
             )}
-          </>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {files.map((fileItem) => (
+                <div
+                  key={fileItem.id}
+                  className="border rounded-lg overflow-hidden relative"
+                >
+                  {/* Remove button */}
+                  {fileItem.status === 'pending' && (
+                    <button
+                      onClick={() => removeFile(fileItem.id)}
+                      className="absolute top-2 right-2 z-10 bg-background/80 rounded-full p-1 hover:bg-background"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+
+                  {/* Preview */}
+                  <div className="aspect-square relative bg-muted">
+                    <img
+                      src={fileItem.preview}
+                      alt={fileItem.name}
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+
+                  {/* Info */}
+                  <div className="p-3">
+                    <p className="text-xs font-medium truncate mb-2">
+                      {fileItem.name}
+                    </p>
+
+                    {/* Status */}
+                    {fileItem.status === 'pending' && (
+                      <div className="text-xs text-muted-foreground">
+                        Ready to upload
+                      </div>
+                    )}
+
+                    {fileItem.status === 'uploading' && (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-xs">
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                          Uploading...
+                        </div>
+                        <Progress value={50} className="h-1" />
+                      </div>
+                    )}
+
+                    {fileItem.status === 'success' && (
+                      <div className="flex items-center gap-2 text-xs text-green-600">
+                        <CheckCircle className="h-3 w-3" />
+                        Uploaded
+                      </div>
+                    )}
+
+                    {fileItem.status === 'error' && (
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 text-xs text-destructive">
+                          <AlertCircle className="h-3 w-3" />
+                          Failed
+                        </div>
+                        {fileItem.error && (
+                          <p className="text-xs text-destructive">
+                            {fileItem.error}
+                          </p>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full mt-2"
+                          onClick={() => uploadSingle(fileItem)}
+                        >
+                          Retry
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {files.length === 0 && (
+          <div className="text-center py-12 text-muted-foreground">
+            <ImageIcon className="h-16 w-16 mx-auto mb-4 opacity-20" />
+            <p>No files selected. Drag files or click above to get started.</p>
+          </div>
         )}
       </div>
     </div>
