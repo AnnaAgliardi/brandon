@@ -130,7 +130,8 @@ export const ChatMessageSchema = z.object({
   user_id: z.string().uuid(),
   role: ChatMessageRoleSchema,
   content: z.string(),
-  image: z.string().optional(),
+  image: z.string().optional(), // Local preview (blob)
+  image_url: z.string().optional(), // Persisted URL from DB
   assets: z.array(BrandonAssetSchema).optional().nullable(),
   created_at: z.string(),
 })

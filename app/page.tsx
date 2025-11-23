@@ -389,12 +389,20 @@ export default function ChatPage() {
               {message.role === 'user' ? (
                 <div className="flex justify-end">
                   <div className="flex flex-col items-end gap-2 max-w-2xl">
-                    {message.image && (
+                    {(message.image || message.image_url) && (
                       <div className="rounded-lg overflow-hidden border bg-muted max-w-[200px]">
                         <img
-                          src={message.image}
+                          src={
+                            message.image ||
+                            (message.image_url
+                              ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/assets-preview/${message.image_url}`
+                              : '')
+                          }
                           alt="User upload"
-                          className="w-full h-auto"
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            ; (e.target as HTMLImageElement).style.display = 'none'
+                          }}
                         />
                       </div>
                     )}

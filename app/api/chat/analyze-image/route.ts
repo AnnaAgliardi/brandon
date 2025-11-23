@@ -35,6 +35,21 @@ export async function POST(request: NextRequest) {
         const buffer = Buffer.from(arrayBuffer)
         const mimeType = image.type
 
+        // Upload image to Supabase Storage
+        const fileName = `${user.id}/${Date.now()}-${image.name}`
+        const { error: uploadError } = await supabase.storage
+            .from('assets-preview')
+            .upload(fileName, buffer, {
+                contentType: mimeType,
+                upsert: false
+            })
+
+        if (uploadError) {
+            console.error('Error uploading image:', uploadError)
+        }
+
+        const imagePath = fileName
+
         // 4. Analyze with Gemini Vision
         console.log('Analyzing image with Gemini Vision...')
         const analysis = await analyzeImage(buffer, mimeType)
@@ -83,7 +98,7 @@ export async function POST(request: NextRequest) {
         // 7. Generate Response
         console.log('Generating chat response...')
         const geminiResponse = await generateChatResponse(
-            query || "What can you tell me about this image and do we have anything similar?",
+            searchContext,
             topCandidates
         )
 
@@ -97,6 +112,7 @@ export async function POST(request: NextRequest) {
             user_id: user.id,
             role: 'user',
             content: userContent,
+            image_url: imagePath, // Save storage path
         })
 
         await supabase.from('chat_messages').insert({
@@ -109,7 +125,8 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({
             assistant_message: geminiResponse.assistant_message,
             assets: geminiResponse.assets,
-            analysis: analysis // Optional: return analysis if we want to show it
+            analysis: analysis, // Optional: return analysis if we want to show it
+            image_path: imagePath // Return path to frontend
         })
 
     } catch (error: any) {
