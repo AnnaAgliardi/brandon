@@ -25,9 +25,36 @@ export async function POST(request: NextRequest) {
         const formData = await request.formData()
         const image = formData.get('image') as File
         const query = formData.get('query') as string | null
+        const sessionId = formData.get('session_id') as string | null
 
         if (!image) {
             return NextResponse.json({ error: 'No image provided' }, { status: 400 })
+        }
+
+        // Handle Session
+        let currentSessionId = sessionId
+        let isNewSession = false
+
+        if (!currentSessionId) {
+            // Create new session if none provided
+            const { data: newSession, error: sessionError } = await supabase
+                .from('chat_sessions')
+                .insert({
+                    user_id: user.id,
+                    title: query ? query.slice(0, 30) : 'Image Analysis',
+                })
+                .select()
+                .single()
+
+            if (sessionError) throw sessionError
+            currentSessionId = newSession.id
+            isNewSession = true
+        } else {
+            // Update existing session timestamp
+            await supabase
+                .from('chat_sessions')
+                .update({ updated_at: new Date().toISOString() })
+                .eq('id', currentSessionId)
         }
 
         // 3. Process Image
@@ -110,6 +137,7 @@ export async function POST(request: NextRequest) {
 
         await supabase.from('chat_messages').insert({
             user_id: user.id,
+            session_id: currentSessionId, // Link to session
             role: 'user',
             content: userContent,
             image_url: imagePath, // Save storage path
@@ -117,12 +145,14 @@ export async function POST(request: NextRequest) {
 
         await supabase.from('chat_messages').insert({
             user_id: user.id,
+            session_id: currentSessionId, // Link to session
             role: 'assistant',
             content: geminiResponse.assistant_message,
             assets: geminiResponse.assets,
         })
 
         return NextResponse.json({
+            session_id: currentSessionId, // Return session ID
             assistant_message: geminiResponse.assistant_message,
             assets: geminiResponse.assets,
             analysis: analysis, // Optional: return analysis if we want to show it

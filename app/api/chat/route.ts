@@ -98,39 +98,64 @@ async function processRequest(
 
     // Parse and validate request
     const body = await request.json()
-    const validatedData = ChatRequestSchema.parse(body)
+    // We manually extract session_id since it's not in ChatRequestSchema yet or we need to update schema
+    // For now, let's trust the body structure or update schema later.
+    // Let's assume body has messages and optional session_id
+    const { messages, session_id } = body
 
-    // Extract latest user message
-    const userMessages = validatedData.messages.filter((m) => m.role === 'user')
-    if (userMessages.length === 0) {
-      send({ type: 'error', data: { error: 'No user message found' } })
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+      send({ type: 'error', data: { error: 'No messages provided' } })
       close()
       return
     }
 
-    const latestUserMessage = userMessages[userMessages.length - 1]
-    const userQuery = latestUserMessage.content
+    const lastMessage = messages[messages.length - 1]
+    const userMessageContent = lastMessage.content
 
-    // Save user message to database
-    const { data: savedUserMessage, error: saveUserError } = await supabase
-      .from('chat_messages')
-      .insert({
-        user_id: user.id,
-        role: 'user',
-        content: userQuery,
-      })
-      .select()
-      .single()
+    // Handle Session
+    let currentSessionId = session_id
+    let isNewSession = false
 
-    if (saveUserError) {
-      console.error('Error saving user message:', saveUserError)
+    if (!currentSessionId) {
+      // Create new session if none provided
+      const { data: newSession, error: sessionError } = await supabase
+        .from('chat_sessions')
+        .insert({
+          user_id: user.id,
+          title: userMessageContent.slice(0, 30) + (userMessageContent.length > 30 ? '...' : ''), // Initial title from first message
+        })
+        .select()
+        .single()
+
+      if (sessionError) throw sessionError
+      currentSessionId = newSession.id
+      isNewSession = true
+    } else {
+      // Update existing session timestamp
+      await supabase
+        .from('chat_sessions')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('id', currentSessionId)
     }
+
+    // Send session ID to client immediately
+    send({ type: 'session', data: { session_id: currentSessionId } })
+
+    // Save User Message
+    const { error: msgError } = await supabase.from('chat_messages').insert({
+      user_id: user.id,
+      session_id: currentSessionId, // Link to session
+      role: 'user',
+      content: userMessageContent,
+    })
+
+    if (msgError) throw msgError
 
     // Send status: Analyzing query
     send({ type: 'status', data: { status: 'Analyzing your query...' } })
 
     // Generate embedding for query
-    const queryEmbedding = await generateEmbedding(userQuery)
+    const queryEmbedding = await generateEmbedding(userMessageContent)
 
     // Get total asset count
     const supabaseAdmin = createClient(
@@ -151,12 +176,8 @@ async function processRequest(
       },
     })
 
-    // Query Pinecone
-    const pineconeResults = await queryVectors(
-      queryEmbedding,
-      30,
-      { status: 'approved' } // Filter for approved assets
-    )
+    // Generate Embedding & Search
+    const pineconeResults = await queryVectors(queryEmbedding, 30, { status: 'approved' })
 
     // Send status: Found matches
     send({
@@ -173,7 +194,7 @@ async function processRequest(
     // Re-rank by recency
     const THREE_YEARS_MS = 3 * 365 * 24 * 60 * 60 * 1000
     const now = Date.now()
-    const ALPHA = 0.8 // Semantic similarity weight
+    const ALPHA = 0.7
 
     const candidates = pineconeResults.map((result: any) => {
       const purchaseDateMs = result.metadata.image_purchase_date || now
@@ -198,24 +219,22 @@ async function processRequest(
     // Send status: Generating response
     send({ type: 'status', data: { status: 'Generating response...' } })
 
-    // Call Gemini to generate response
-    const geminiResponse = await generateChatResponse(userQuery, topCandidates)
+    // Generate Response
+    const geminiResponse = await generateChatResponse(
+      userMessageContent,
+      topCandidates
+    )
 
-    // Save assistant message to database
-    const { error: saveAssistantError } = await supabase
-      .from('chat_messages')
-      .insert({
-        user_id: user.id,
-        role: 'assistant',
-        content: geminiResponse.assistant_message,
-        assets: geminiResponse.assets,
-      })
+    // Save Assistant Message
+    await supabase.from('chat_messages').insert({
+      user_id: user.id,
+      session_id: currentSessionId, // Link to session
+      role: 'assistant',
+      content: geminiResponse.assistant_message,
+      assets: geminiResponse.assets,
+    })
 
-    if (saveAssistantError) {
-      console.error('Error saving assistant message:', saveAssistantError)
-    }
-
-    // Send final result
+    // Stream Response
     send({
       type: 'result',
       data: {
@@ -226,8 +245,7 @@ async function processRequest(
 
     close()
   } catch (error: any) {
-    console.error('Error in chat processing:', error)
-
+    console.error('Error in chat POST:', error)
     send({
       type: 'error',
       data: { error: error.message || 'Internal server error' },

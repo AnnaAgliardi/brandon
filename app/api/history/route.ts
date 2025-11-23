@@ -26,11 +26,22 @@ export async function GET(request: NextRequest) {
     // Authenticate user
     const user = await requireAuth(supabase)
 
-    // Fetch chat messages for the user
+    // Get session_id from query params
+    const url = new URL(request.url)
+    const sessionId = url.searchParams.get('session_id')
+
+    if (!sessionId) {
+      // If no session ID, return empty list (or could return most recent session's messages)
+      // For now, let's return empty to enforce session selection
+      return NextResponse.json({ messages: [] })
+    }
+
+    // Fetch chat messages for the user and session
     const { data: messages, error } = await supabase
       .from('chat_messages')
       .select('*')
       .eq('user_id', user.id)
+      .eq('session_id', sessionId)
       .order('created_at', { ascending: true })
 
     if (error) {
