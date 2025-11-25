@@ -18,6 +18,8 @@ import {
 } from 'lucide-react'
 import { ChatSidebar } from '@/components/chat-sidebar'
 
+import { AssetPreviewDialog } from '@/components/asset-preview-dialog'
+
 export default function ChatPage() {
   const router = useRouter()
   const supabase = createClient()
@@ -34,6 +36,9 @@ export default function ChatPage() {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+
+  // Asset Preview State
+  const [previewAsset, setPreviewAsset] = useState<BrandonAsset | null>(null)
 
   // Check authentication and load chat history
   // Check authentication
@@ -465,7 +470,11 @@ export default function ChatPage() {
                     {message.assets && message.assets.length > 0 && (
                       <div className="flex gap-4 overflow-x-auto pb-2">
                         {message.assets.map((asset) => (
-                          <AssetCard key={asset.id} asset={asset} />
+                          <AssetCard
+                            key={asset.id}
+                            asset={asset}
+                            onPreview={setPreviewAsset}
+                          />
                         ))}
                       </div>
                     )}
@@ -563,6 +572,13 @@ export default function ChatPage() {
           confirmText="Clear History"
           cancelText="Cancel"
           isDestructive
+        />
+
+        {/* Asset Preview Dialog */}
+        <AssetPreviewDialog
+          asset={previewAsset}
+          open={!!previewAsset}
+          onOpenChange={(open) => !open && setPreviewAsset(null)}
         />
       </div>
     </div>

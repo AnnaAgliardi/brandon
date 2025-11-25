@@ -118,8 +118,16 @@ export const BrandonAssetSchema = z.object({
   file_name: z.string().optional().nullable(),
   url: z.string().optional().nullable(),
   preview_path: z.string(),
+  storage_path: z.string().optional(),
   label: z.string(),
   reason: z.string(),
+  brand: z.string().optional().nullable(),
+  status: z.string().optional(),
+  region_representation: z.string().optional().nullable(),
+  campaign: z.string().optional().nullable(),
+  location: z.string().optional().nullable(),
+  license_type_usage: z.string().optional(),
+  llm_description: z.string().optional(),
 })
 
 export type BrandonAsset = z.infer<typeof BrandonAssetSchema>
