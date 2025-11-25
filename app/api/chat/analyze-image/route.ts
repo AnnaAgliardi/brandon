@@ -143,6 +143,7 @@ export async function POST(request: NextRequest) {
             image_url: imagePath, // Save storage path
         })
 
+
         await supabase.from('chat_messages').insert({
             user_id: user.id,
             session_id: currentSessionId, // Link to session
@@ -151,10 +152,29 @@ export async function POST(request: NextRequest) {
             assets: geminiResponse.assets,
         })
 
+        // Enrich assets with full metadata from candidates
+        const enrichedAssets = geminiResponse.assets.map((asset: any) => {
+            const candidate = topCandidates.find((c: any) => c.assetId === asset.id)
+            if (candidate) {
+                return {
+                    ...asset,
+                    storage_path: candidate.preview_path?.replace('preview/', ''), // Derive storage path from preview path
+                    brand: candidate.brand,
+                    status: candidate.status,
+                    region_representation: candidate.region_representation,
+                    campaign: candidate.campaign,
+                    location: candidate.location,
+                    license_type_usage: candidate.license_type_usage,
+                    llm_description: candidate.llm_description,
+                }
+            }
+            return asset
+        })
+
         return NextResponse.json({
             session_id: currentSessionId, // Return session ID
             assistant_message: geminiResponse.assistant_message,
-            assets: geminiResponse.assets,
+            assets: enrichedAssets,
             analysis: analysis, // Optional: return analysis if we want to show it
             image_path: imagePath // Return path to frontend
         })

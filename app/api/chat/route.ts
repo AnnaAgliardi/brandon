@@ -225,13 +225,32 @@ async function processRequest(
       topCandidates
     )
 
+    // Enrich assets with full metadata from candidates
+    const enrichedAssets = geminiResponse.assets.map((asset: BrandonAsset) => {
+      const candidate = topCandidates.find((c: any) => c.assetId === asset.id)
+      if (candidate) {
+        return {
+          ...asset,
+          storage_path: candidate.preview_path?.replace('preview/', ''), // Derive storage path from preview path
+          brand: candidate.brand,
+          status: candidate.status,
+          region_representation: candidate.region_representation,
+          campaign: candidate.campaign,
+          location: candidate.location,
+          license_type_usage: candidate.license_type_usage,
+          llm_description: candidate.llm_description,
+        }
+      }
+      return asset
+    })
+
     // Save Assistant Message
     await supabase.from('chat_messages').insert({
       user_id: user.id,
       session_id: currentSessionId, // Link to session
       role: 'assistant',
       content: geminiResponse.assistant_message,
-      assets: geminiResponse.assets,
+      assets: enrichedAssets,
     })
 
     // Stream Response
@@ -239,7 +258,7 @@ async function processRequest(
       type: 'result',
       data: {
         assistant_message: geminiResponse.assistant_message,
-        assets: geminiResponse.assets,
+        assets: enrichedAssets,
       },
     })
 
