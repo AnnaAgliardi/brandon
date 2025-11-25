@@ -380,15 +380,13 @@ export default function ChatPage() {
           <div className="container mx-auto px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-4">
               <h1 className="text-2xl font-bold">Brandon</h1>
-              {userRole === 'admin' && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => router.push('/admin')}
-                >
-                  Admin Dashboard
-                </Button>
-              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => router.push(userRole === 'admin' ? '/admin' : '/dashboard')}
+              >
+                {userRole === 'admin' ? 'Admin Dashboard' : 'Dashboard'}
+              </Button>
             </div>
             <div className="flex items-center gap-2">
               {/* Clear History is now per-session */}
