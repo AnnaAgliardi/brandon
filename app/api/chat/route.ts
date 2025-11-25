@@ -231,7 +231,7 @@ async function processRequest(
       if (candidate) {
         return {
           ...asset,
-          storage_path: candidate.preview_path?.replace('preview/', ''), // Derive storage path from preview path
+          storage_path: candidate.storage_path,
           brand: candidate.brand,
           status: candidate.status,
           region_representation: candidate.region_representation,

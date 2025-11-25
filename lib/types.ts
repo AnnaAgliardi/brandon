@@ -172,6 +172,7 @@ export interface PineconeMetadata {
   dam_id?: string | null
   file_name?: string | null
   url?: string | null
+  storage_path: string
   preview_path: string
   llm_description: string
   tags?: string[]

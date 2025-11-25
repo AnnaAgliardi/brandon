@@ -88,6 +88,7 @@ export async function POST(request: NextRequest) {
       dam_id: asset.dam_id || undefined,
       file_name: asset.file_name || undefined,
       url: asset.url || undefined,
+      storage_path: asset.storage_path,
       preview_path: asset.preview_path,
       llm_description: asset.llm_description,
       tags: asset.tags || undefined,
