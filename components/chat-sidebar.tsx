@@ -78,7 +78,7 @@ export function ChatSidebar({
     return (
         <div
             className={cn(
-                'flex flex-col border-r bg-muted/10 transition-all duration-300 ease-in-out h-screen sticky top-0',
+                'flex flex-col border-r bg-muted/10 transition-all duration-300 ease-in-out h-[100dvh] sticky top-0',
                 isOpen ? 'w-80' : 'w-[60px]'
             )}
         >
