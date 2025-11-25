@@ -27,14 +27,12 @@ interface ChatSidebarProps {
     currentSessionId: string | null
     onSessionSelect: (sessionId: string) => void
     onNewChat: () => void
-    onLogout: () => void
 }
 
 export function ChatSidebar({
     currentSessionId,
     onSessionSelect,
     onNewChat,
-    onLogout,
 }: ChatSidebarProps) {
     const [sessions, setSessions] = useState<ChatSession[]>([])
     const [searchQuery, setSearchQuery] = useState('')
@@ -190,29 +188,8 @@ export function ChatSidebar({
                 </div>
             </ScrollArea>
 
-            {/* Footer / Logout */}
-            <div className="p-4 border-t mt-auto">
-                {isOpen ? (
-                    <Button
-                        variant="secondary"
-                        className="w-full justify-start gap-2 text-destructive hover:text-destructive/90"
-                        onClick={onLogout}
-                    >
-                        <LogOut className="h-4 w-4" />
-                        Log out
-                    </Button>
-                ) : (
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="w-full text-destructive hover:text-destructive/90"
-                        onClick={onLogout}
-                        title="Log out"
-                    >
-                        <LogOut className="h-4 w-4" />
-                    </Button>
-                )}
-            </div>
+            {/* Footer - Empty for now or could hold other settings */}
+            {/* <div className="p-4 border-t mt-auto"></div> */}
         </div>
     )
 }

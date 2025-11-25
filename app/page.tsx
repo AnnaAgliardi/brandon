@@ -372,7 +372,6 @@ export default function ChatPage() {
         currentSessionId={currentSessionId}
         onSessionSelect={handleSessionSelect}
         onNewChat={handleNewChat}
-        onLogout={handleLogout}
       />
 
       <div className="flex-1 flex flex-col min-w-0">
@@ -391,19 +390,30 @@ export default function ChatPage() {
                 </Button>
               )}
             </div>
-            {/* Clear History is now per-session, maybe move to sidebar or keep here for current session */}
-            {currentSessionId && (
+            <div className="flex items-center gap-2">
+              {/* Clear History is now per-session */}
+              {currentSessionId && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleClearHistory}
+                  disabled={isClearing || isLoading}
+                  className="text-muted-foreground hover:text-destructive"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Clear Chat
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={handleClearHistory}
-                disabled={isClearing || isLoading}
-                className="text-muted-foreground hover:text-destructive"
+                onClick={handleLogout}
+                className="text-muted-foreground hover:text-foreground"
               >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Clear Chat
+                <LogOut className="h-4 w-4 mr-2" />
+                Log out
               </Button>
-            )}
+            </div>
           </div>
         </header>
 
