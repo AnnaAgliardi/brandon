@@ -215,7 +215,7 @@ export default function UsersPage() {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>User</TableHead>
+                                <TableHead>Email</TableHead>
                                 <TableHead>Role</TableHead>
                                 <TableHead>Joined</TableHead>
                                 <TableHead>Last Active</TableHead>
@@ -226,14 +226,13 @@ export default function UsersPage() {
                             {users.map((user) => (
                                 <TableRow key={user.id}>
                                     <TableCell>
-                                        <div className="font-medium">{user.full_name || 'No Name'}</div>
-                                        <div className="text-sm text-muted-foreground">{user.email}</div>
+                                        <div className="font-medium">{user.email}</div>
                                     </TableCell>
                                     <TableCell>
                                         <span
                                             className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user.role === 'admin'
-                                                    ? 'bg-primary/10 text-primary'
-                                                    : 'bg-muted text-muted-foreground'
+                                                ? 'bg-primary/10 text-primary'
+                                                : 'bg-muted text-muted-foreground'
                                                 }`}
                                         >
                                             {user.role}
