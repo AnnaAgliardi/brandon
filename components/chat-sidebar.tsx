@@ -194,20 +194,20 @@ export function ChatSidebar({
             <div className="p-4 border-t mt-auto">
                 {isOpen ? (
                     <Button
-                        variant="outline"
-                        className="w-full justify-start gap-2 text-muted-foreground hover:text-destructive"
+                        variant="secondary"
+                        className="w-full justify-start gap-2 text-destructive hover:text-destructive/90"
                         onClick={onLogout}
                     >
                         <LogOut className="h-4 w-4" />
-                        Logout
+                        Log out
                     </Button>
                 ) : (
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="w-full text-muted-foreground hover:text-destructive"
+                        className="w-full text-destructive hover:text-destructive/90"
                         onClick={onLogout}
-                        title="Logout"
+                        title="Log out"
                     >
                         <LogOut className="h-4 w-4" />
                     </Button>
