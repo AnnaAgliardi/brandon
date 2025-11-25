@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Upload, MessageSquare, ArrowLeft } from 'lucide-react'
+import { Upload, MessageSquare, ArrowLeft, User } from 'lucide-react'
 
 export default function AdminDashboard() {
   const router = useRouter()
@@ -79,6 +79,26 @@ export default function AdminDashboard() {
               </p>
               <Button variant="outline" onClick={() => router.push('/')}>
                 Go to Chat
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <User className="h-5 w-5" />
+                Account Manager
+              </CardTitle>
+              <CardDescription>
+                Manage your profile and settings
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-4">
+                Update your email, password, or delete your account.
+              </p>
+              <Button variant="outline" onClick={() => router.push('/admin/account')}>
+                Manage Account
               </Button>
             </CardContent>
           </Card>
