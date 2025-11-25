@@ -73,6 +73,8 @@ export default function AssetsManagerPage() {
     // Delete
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
     const [deletingId, setDeletingId] = useState<string | null>(null)
+    const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false)
+    const [isBulkDeleting, setIsBulkDeleting] = useState(false)
 
     // Bulk Selection
     const [selectedIds, setSelectedIds] = useState<string[]>([])
@@ -271,6 +273,37 @@ export default function AssetsManagerPage() {
         }
     }
 
+    async function handleBulkDelete() {
+        if (selectedIds.length === 0) return
+
+        setIsBulkDeleting(true)
+        try {
+            const {
+                data: { session },
+            } = await supabase.auth.getSession()
+            if (!session) throw new Error('Not authenticated')
+
+            // Delete each selected asset
+            const promises = selectedIds.map(async (id) => {
+                return fetch(`/api/admin/assets/${id}`, {
+                    method: 'DELETE',
+                    headers: { Authorization: `Bearer ${session.access_token}` },
+                })
+            })
+
+            await Promise.all(promises)
+
+            await loadAssets()
+            setSelectedIds([])
+            setBulkAction('')
+            setShowBulkDeleteConfirm(false)
+        } catch (err: any) {
+            setError(err.message)
+        } finally {
+            setIsBulkDeleting(false)
+        }
+    }
+
     const getPreviewUrl = (path: string) =>
         `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/assets-preview/${path}`
 
@@ -373,6 +406,7 @@ export default function AssetsManagerPage() {
                                     <SelectItem value="status">Change Status</SelectItem>
                                     <SelectItem value="brand">Change Brand</SelectItem>
                                     <SelectItem value="region_representation">Change Region</SelectItem>
+                                    <SelectItem value="delete">Delete Assets</SelectItem>
                                 </SelectContent>
                             </Select>
                             {bulkAction === 'status' && (
@@ -407,20 +441,31 @@ export default function AssetsManagerPage() {
                                     className="w-48"
                                 />
                             )}
-                            <Button
-                                onClick={handleBulkUpdate}
-                                disabled={!bulkAction || !bulkValue || isBulkUpdating}
-                                size="sm"
-                            >
-                                {isBulkUpdating ? (
-                                    <>
-                                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                        Updating...
-                                    </>
-                                ) : (
-                                    'Apply'
-                                )}
-                            </Button>
+                            {bulkAction === 'delete' ? (
+                                <Button
+                                    onClick={() => setShowBulkDeleteConfirm(true)}
+                                    disabled={selectedIds.length === 0}
+                                    size="sm"
+                                    variant="destructive"
+                                >
+                                    Delete {selectedIds.length} Asset{selectedIds.length !== 1 ? 's' : ''}
+                                </Button>
+                            ) : (
+                                <Button
+                                    onClick={handleBulkUpdate}
+                                    disabled={!bulkAction || !bulkValue || isBulkUpdating}
+                                    size="sm"
+                                >
+                                    {isBulkUpdating ? (
+                                        <>
+                                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                            Updating...
+                                        </>
+                                    ) : (
+                                        'Apply'
+                                    )}
+                                </Button>
+                            )}
                             <Button
                                 variant="outline"
                                 size="sm"
@@ -746,6 +791,17 @@ export default function AssetsManagerPage() {
                 title="Delete Asset"
                 description="Are you sure you want to delete this asset? This will permanently remove it from the database, storage, and search index. This action cannot be undone."
                 confirmText="Delete"
+                isDestructive
+            />
+
+            {/* Bulk Delete Confirmation */}
+            <ConfirmDialog
+                open={showBulkDeleteConfirm}
+                onOpenChange={setShowBulkDeleteConfirm}
+                onConfirm={handleBulkDelete}
+                title={`Delete ${selectedIds.length} Asset${selectedIds.length !== 1 ? 's' : ''}?`}
+                description={`Are you sure you want to delete ${selectedIds.length} selected asset${selectedIds.length !== 1 ? 's' : ''}? This will permanently remove them from the database, storage, and search index. This action cannot be undone.`}
+                confirmText={isBulkDeleting ? 'Deleting...' : 'Delete All'}
                 isDestructive
             />
         </div>
