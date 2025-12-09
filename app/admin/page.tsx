@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
-import { ArrowLeft, Upload, User } from "lucide-react"
+import { ArrowLeft, Upload, User, Users, Image } from "lucide-react"
 import { cn } from "@/lib/utils"
 export default function AdminDashboard() {
   const router = useRouter()
@@ -43,33 +43,33 @@ export default function AdminDashboard() {
           />
 
           <DashboardCard
-            icon={<Upload className="h-6 w-6" />} // Using FileText or similar might be better but keeping logical icon
+            icon={<Image className="h-6 w-6" />}
             title="Asset Manager"
             description="View overview of all uploaded assets"
             details="Browse your asset library with stats and filters."
             actionLabel="View Assets"
             onClick={() => router.push('/admin/assets')}
-            variant="outline"
+            primary
           />
 
           <DashboardCard
-            icon={<User className="h-6 w-6" />}
+            icon={<Users className="h-6 w-6" />}
             title="Manage Users"
             description="Administer user accounts and roles"
             details="View all users, edit roles (admin/user), or remove members."
             actionLabel="Manage Users"
             onClick={() => router.push('/admin/users')}
-            variant="outline"
+            primary
           />
 
           <DashboardCard
-            icon={<User className="h-6 w-6" />} // Using separate icon for Account might be good
+            icon={<User className="h-6 w-6" />}
             title="Account Setting"
             description="Manage your profile and settings"
             details="Update your email, password, or delete your account."
             actionLabel="Manage Account"
             onClick={() => router.push('/admin/account')}
-            variant="outline"
+            primary
           />
         </div>
       </div>
@@ -84,8 +84,7 @@ function DashboardCard({
   details,
   actionLabel,
   onClick,
-  primary,
-  variant
+  primary
 }: any) {
   return (
     <Card className="border-0 shadow-sm rounded-3xl overflow-hidden hover:shadow-md transition-all duration-200 group bg-white">
