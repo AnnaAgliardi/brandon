@@ -30,9 +30,9 @@ export default function AdminLayout({
       }
 
       const { data: roleData } = await supabase
-        .from('profiles')
+        .from('user_roles')
         .select('role')
-        .eq('id', user.id)
+        .eq('user_id', user.id)
         .single()
 
       if (!roleData || roleData.role !== 'admin') {
