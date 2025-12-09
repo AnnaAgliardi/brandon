@@ -514,25 +514,25 @@ export default function ChatPage() {
                     }}
                     className="p-6 rounded-2xl border border-slate-100 bg-white hover:shadow-md hover:border-slate-200 transition-all duration-200 text-left flex items-center h-24 group"
                   >
-                    <span className="text-sm font-medium text-slate-600 group-hover:text-blue-600 transition-colors">"Find the images about the last campaign"</span>
+                    <span className="text-sm font-medium text-slate-600 group-hover:text-blue-600 transition-colors">&quot;Find the images about the last campaign&quot;</span>
                   </button>
                   <button
                     onClick={() => setInputValue("Show me images with digital cockpit and GPS")}
                     className="p-6 rounded-2xl border border-slate-100 bg-white hover:shadow-md hover:border-slate-200 transition-all duration-200 text-left flex items-center h-24 group"
                   >
-                    <span className="text-sm font-medium text-slate-600 group-hover:text-blue-600 transition-colors">"Show me images with digital cockpit and GPS"</span>
+                    <span className="text-sm font-medium text-slate-600 group-hover:text-blue-600 transition-colors">&quot;Show me images with digital cockpit and GPS&quot;</span>
                   </button>
                   <button
                     onClick={() => setInputValue("Search images with trucks on the highway")}
                     className="p-6 rounded-2xl border border-slate-100 bg-white hover:shadow-md hover:border-slate-200 transition-all duration-200 text-left flex items-center h-24 group"
                   >
-                    <span className="text-sm font-medium text-slate-600 group-hover:text-blue-600 transition-colors">"Search images with trucks on the highway"</span>
+                    <span className="text-sm font-medium text-slate-600 group-hover:text-blue-600 transition-colors">&quot;Search images with trucks on the highway&quot;</span>
                   </button>
                   <button
                     onClick={() => setInputValue("Find images of EV car and charging point")}
                     className="p-6 rounded-2xl border border-slate-100 bg-white hover:shadow-md hover:border-slate-200 transition-all duration-200 text-left flex items-center h-24 group"
                   >
-                    <span className="text-sm font-medium text-slate-600 group-hover:text-blue-600 transition-colors">"Find images of EV car and charging point"</span>
+                    <span className="text-sm font-medium text-slate-600 group-hover:text-blue-600 transition-colors">&quot;Find images of EV car and charging point&quot;</span>
                   </button>
                 </div>
               </div>

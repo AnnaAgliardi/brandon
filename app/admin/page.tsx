@@ -1,5 +1,10 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
+import { Button } from "@/components/ui/button"
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
+import { ArrowLeft, Upload, User } from "lucide-react"
+import { cn } from "@/lib/utils"
 export default function AdminDashboard() {
   const router = useRouter()
 
@@ -114,5 +119,4 @@ function DashboardCard({
   )
 }
 
-// Add cn import if missing, but likely needed in imports
-import { cn } from '@/lib/utils'
+
