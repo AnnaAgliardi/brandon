@@ -213,8 +213,8 @@ async function processRequest(
     // Sort by combined score
     candidates.sort((a, b) => b.combinedScore - a.combinedScore)
 
-    // Take top 10
-    const topCandidates = candidates.slice(0, 10)
+    // Take top 7 for faster response generation
+    const topCandidates = candidates.slice(0, 7)
 
     // Send status: Generating response
     send({ type: 'status', data: { status: 'Generating response...' } })

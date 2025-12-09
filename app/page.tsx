@@ -15,8 +15,12 @@ import {
   Send,
   X,
   Camera,
+  Mic,
+  MicOff,
+  Bot
 } from 'lucide-react'
 import { ChatSidebar } from '@/components/chat-sidebar'
+import { cn } from '@/lib/utils'
 
 import { AssetPreviewDialog } from '@/components/asset-preview-dialog'
 
@@ -25,9 +29,10 @@ export default function ChatPage() {
   const supabase = createClient()
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
+
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [inputValue, setInputValue] = useState('')
-  const [isLoading, setIsLoading] = useState(false) // Keep isLoading for button disable
+  const [isLoading, setIsLoading] = useState(false)
   const [isThinking, setIsThinking] = useState(false)
   const [statusMessage, setStatusMessage] = useState('')
   const [userRole, setUserRole] = useState<'admin' | 'user' | null>(null)
@@ -40,6 +45,78 @@ export default function ChatPage() {
   // Asset Preview State
   const [previewAsset, setPreviewAsset] = useState<BrandonAsset | null>(null)
 
+  // Voice Input State
+  const [isListening, setIsListening] = useState(false)
+  const recognitionRef = useRef<any>(null)
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) {
+        router.push('/login')
+      } else {
+        supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single()
+          .then(({ data }) => {
+            setUserRole(data?.role as 'admin' | 'user')
+          })
+      }
+    })
+  }, [supabase, router])
+
+
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+      recognitionRef.current = new SpeechRecognition()
+      recognitionRef.current.continuous = true
+      recognitionRef.current.interimResults = true
+
+      recognitionRef.current.onresult = (event: any) => {
+        let finalTranscript = ''
+
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript
+          }
+        }
+
+        if (finalTranscript) {
+          setInputValue((prev) => {
+            const newText = prev + (prev && !prev.endsWith(' ') ? ' ' : '') + finalTranscript
+            return newText
+          })
+        }
+      }
+
+      recognitionRef.current.onerror = (event: any) => {
+        console.error('Speech recognition error', event.error)
+        setIsListening(false)
+      }
+      recognitionRef.current.onend = () => {
+        setIsListening(false)
+      }
+    }
+  }, [])
+
+  const toggleListening = () => {
+    if (!recognitionRef.current) {
+      alert('Speech recognition is not supported in this browser.')
+      return
+    }
+
+    if (isListening) {
+      recognitionRef.current.stop()
+      setIsListening(false)
+    } else {
+      recognitionRef.current.start()
+      setIsListening(true)
+    }
+  }
+
   // Check authentication and load chat history
   // Check authentication
   useEffect(() => {
@@ -49,7 +126,13 @@ export default function ChatPage() {
   // Load history when session changes
   useEffect(() => {
     if (currentSessionId) {
-      loadChatHistory(currentSessionId)
+      // Only load history if we don't have messages (user selected existing session from sidebar)
+      // Don't reload if we already have messages (session_id was just created during active chat)
+      if (messages.length === 0) {
+        loadChatHistory(currentSessionId)
+      } else {
+        setIsLoadingHistory(false)
+      }
     } else {
       setMessages([])
       setIsLoadingHistory(false)
@@ -77,9 +160,9 @@ export default function ChatPage() {
 
     // Get user role
     const { data: roleData } = await supabase
-      .from('user_roles')
+      .from('profiles')
       .select('role')
-      .eq('user_id', user.id)
+      .eq('id', user.id)
       .single()
 
     if (roleData) {
@@ -126,6 +209,8 @@ export default function ChatPage() {
   }
 
   function handleSessionSelect(sessionId: string) {
+    // Clear messages first so the useEffect knows to load new session's history
+    setMessages([])
     setCurrentSessionId(sessionId)
   }
 
@@ -210,12 +295,16 @@ export default function ChatPage() {
 
     if ((!inputValue.trim() && !selectedImage) || isLoading) return
 
+    // Save references before clearing state
+    const imageToUpload = selectedImage
+    const currentInput = inputValue
+
     // Add user message immediately
     const userMessage: ChatMessage = {
       id: crypto.randomUUID(),
       user_id: '', // Will be filled by backend
       role: 'user',
-      content: inputValue,
+      content: currentInput,
       image: imagePreview || undefined,
       created_at: new Date().toISOString(),
     }
@@ -244,11 +333,11 @@ export default function ChatPage() {
       }
 
       // Handle Image Upload vs Text Query
-      if (selectedImage) {
+      if (imageToUpload) {
         const formData = new FormData()
-        formData.append('image', selectedImage)
-        if (inputValue.trim()) {
-          formData.append('query', inputValue)
+        formData.append('image', imageToUpload)
+        if (currentInput.trim()) {
+          formData.append('query', currentInput)
         }
         if (currentSessionId) {
           formData.append('session_id', currentSessionId)
@@ -362,16 +451,8 @@ export default function ChatPage() {
     }
   }
 
-  if (isLoadingHistory) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-muted-foreground">Loading...</p>
-      </div>
-    )
-  }
-
   return (
-    <div className="min-h-screen flex bg-background">
+    <div className="min-h-screen flex bg-background font-sans">
       {/* Sidebar */}
       <ChatSidebar
         currentSessionId={currentSessionId}
@@ -379,188 +460,240 @@ export default function ChatPage() {
         onNewChat={handleNewChat}
       />
 
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Header - Simplified since sidebar has logout */}
-        <header className="border-b bg-card sticky top-0 z-20">
-          <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <h1 className="text-2xl font-bold">Brandon</h1>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => router.push(userRole === 'admin' ? '/admin' : '/dashboard')}
-              >
-                {userRole === 'admin' ? 'Admin Dashboard' : 'Dashboard'}
-              </Button>
-            </div>
-            <div className="flex items-center gap-2">
-              {/* Clear History is now per-session */}
-              {currentSessionId && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleClearHistory}
-                  disabled={isClearing || isLoading}
-                  className="text-muted-foreground hover:text-destructive"
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Clear Chat
-                </Button>
-              )}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleLogout}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Log out
-              </Button>
-            </div>
+      <div className="flex-1 flex flex-col min-w-0 relative">
+        {/* Header */}
+        <header className="absolute top-0 right-0 left-0 z-10 p-6 flex justify-between items-start pointer-events-none">
+          {/* Left side title - aligned with content */}
+          <div className="pointer-events-auto">
+            <h1 className="text-xl font-bold tracking-tight">Brandon</h1>
+          </div>
+
+          {/* Right side controls */}
+          <div className="flex items-center gap-2 pointer-events-auto">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => router.push(userRole === 'admin' ? '/admin' : '/dashboard')}
+              className="text-muted-foreground hover:text-foreground gap-2"
+            >
+              <div className="grid grid-cols-2 gap-[1px] w-3.5 h-3.5 opacity-70">
+                <div className="bg-current rounded-[1px]"></div>
+                <div className="bg-current rounded-[1px]"></div>
+                <div className="bg-current rounded-[1px]"></div>
+                <div className="bg-current rounded-[1px]"></div>
+              </div>
+              {userRole === 'admin' ? 'Admin Dashboard' : 'Dashboard'}
+            </Button>
           </div>
         </header>
 
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="container mx-auto px-4 py-8 max-w-4xl">
+        {/* Messages / Main Content */}
+        <div className="flex-1 overflow-y-auto px-4 pt-6 pb-32 scroll-smooth">
+          <div className="container mx-auto px-4 py-8 max-w-3xl flex flex-col min-h-full">
+
+            {/* Empty State / Welcome */}
             {messages.length === 0 && (
-              <div className="text-center py-12">
-                <h2 className="text-2xl font-semibold mb-2">
+              <div className="flex-1 flex flex-col items-center justify-center -mt-20">
+                <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-3xl flex items-center justify-center mb-8 shadow-sm">
+                  <Bot className="w-10 h-10" strokeWidth={2.5} />
+                </div>
+
+                <h2 className="text-4xl font-bold mb-4 tracking-tight text-center text-[#0F172A]">
                   Welcome to Brandon
                 </h2>
-                <p className="text-muted-foreground">
-                  Your AI-powered brand asset assistant. Ask me to find images
-                  from your DAM.
+                <p className="text-slate-500 text-lg mb-16 text-center max-w-lg leading-relaxed">
+                  Your AI-powered brand asset assistant. Ask me to find
+                  images or any questions about the brand identity.
                 </p>
+
+                {/* Suggested Queries Grid */}
+                <div className="grid grid-cols-2 gap-4 w-full max-w-3xl">
+                  <button
+                    onClick={() => {
+                      setInputValue("Find the images about the last campaign")
+                    }}
+                    className="p-6 rounded-2xl border border-slate-100 bg-white hover:shadow-md hover:border-slate-200 transition-all duration-200 text-left flex items-center h-24 group"
+                  >
+                    <span className="text-sm font-medium text-slate-600 group-hover:text-blue-600 transition-colors">"Find the images about the last campaign"</span>
+                  </button>
+                  <button
+                    onClick={() => setInputValue("Show me images with digital cockpit and GPS")}
+                    className="p-6 rounded-2xl border border-slate-100 bg-white hover:shadow-md hover:border-slate-200 transition-all duration-200 text-left flex items-center h-24 group"
+                  >
+                    <span className="text-sm font-medium text-slate-600 group-hover:text-blue-600 transition-colors">"Show me images with digital cockpit and GPS"</span>
+                  </button>
+                  <button
+                    onClick={() => setInputValue("Search images with trucks on the highway")}
+                    className="p-6 rounded-2xl border border-slate-100 bg-white hover:shadow-md hover:border-slate-200 transition-all duration-200 text-left flex items-center h-24 group"
+                  >
+                    <span className="text-sm font-medium text-slate-600 group-hover:text-blue-600 transition-colors">"Search images with trucks on the highway"</span>
+                  </button>
+                  <button
+                    onClick={() => setInputValue("Find images of EV car and charging point")}
+                    className="p-6 rounded-2xl border border-slate-100 bg-white hover:shadow-md hover:border-slate-200 transition-all duration-200 text-left flex items-center h-24 group"
+                  >
+                    <span className="text-sm font-medium text-slate-600 group-hover:text-blue-600 transition-colors">"Find images of EV car and charging point"</span>
+                  </button>
+                </div>
               </div>
             )}
 
-            {messages.map((message) => (
-              <div key={message.id} className="mb-6">
-                {message.role === 'user' ? (
-                  <div className="flex justify-end">
-                    <div className="flex flex-col items-end gap-2 max-w-2xl">
-                      {(message.image || message.image_url) && (
-                        <div className="rounded-lg overflow-hidden border bg-muted max-w-[200px]">
-                          <img
-                            src={
-                              message.image ||
-                              (message.image_url
-                                ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/assets-preview/${message.image_url}`
-                                : '')
-                            }
-                            alt="User upload"
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              ; (e.target as HTMLImageElement).style.display = 'none'
-                            }}
-                          />
+            {/* Chat Messages */}
+            <div className="pt-20 pb-4">
+              {messages.map((message) => (
+                <div key={message.id} className="mb-8">
+                  {message.role === 'user' ? (
+                    <div className="flex justify-end">
+                      <div className="flex flex-col items-end gap-2 max-w-2xl">
+                        {(message.image || message.image_url) && (
+                          <div className="rounded-2xl overflow-hidden border bg-muted max-w-[200px] shadow-sm">
+                            <img
+                              src={
+                                message.image ||
+                                (message.image_url
+                                  ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/assets-preview/${message.image_url}`
+                                  : '')
+                              }
+                              alt="User upload"
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                ; (e.target as HTMLImageElement).style.display = 'none'
+                              }}
+                            />
+                          </div>
+                        )}
+                        <div className="bg-secondary text-secondary-foreground rounded-2xl px-5 py-3 text-base">
+                          {message.content || (message.image ? 'Sent an image' : '')}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-4">
+                      <div className="flex items-start gap-4">
+                        <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 mt-1">
+                          🤖
+                        </div>
+                        <div className="rounded-2xl px-0 py-1 max-w-2xl text-base leading-relaxed">
+                          {message.content}
+                        </div>
+                      </div>
+                      {message.assets && message.assets.length > 0 && (
+                        <div className="pl-12">
+                          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+                            {message.assets.map((asset) => (
+                              <AssetCard
+                                key={asset.id}
+                                asset={asset}
+                                onPreview={setPreviewAsset}
+                              />
+                            ))}
+                          </div>
                         </div>
                       )}
-                      <div className="bg-primary text-primary-foreground rounded-lg px-4 py-2">
-                        {message.content || (message.image ? 'Sent an image' : '')}
-                      </div>
                     </div>
-                  </div>
-                ) : (
-                  <div className="flex flex-col gap-4">
-                    <div className="bg-muted rounded-lg px-4 py-2 max-w-2xl">
-                      {message.content}
-                    </div>
-                    {message.assets && message.assets.length > 0 && (
-                      <div className="flex gap-4 overflow-x-auto pb-2">
-                        {message.assets.map((asset) => (
-                          <AssetCard
-                            key={asset.id}
-                            asset={asset}
-                            onPreview={setPreviewAsset}
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            ))}
+                  )}
+                </div>
+              ))}
+            </div>
 
-            {isThinking && <ThinkingIndicator status={statusMessage} />}
+            {isThinking && (
+              <div className="flex items-center gap-3 pl-2 mb-8 text-muted-foreground animate-pulse">
+                <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center text-xs">...</div>
+                <span className="text-sm">Brandon is thinking...</span>
+              </div>
+            )}
 
             <div ref={messagesEndRef} />
           </div>
         </div>
 
-        {/* Input */}
-        <div className="border-t bg-background fixed bottom-0 left-0 right-0 z-50">
-          <div className="container mx-auto px-4 py-4 max-w-4xl">
-            <form onSubmit={handleSubmit} className="flex flex-col gap-2 w-full">
-              {imagePreview && (
-                <div className="relative w-fit mb-2">
-                  <div className="rounded-lg overflow-hidden border bg-muted h-20 w-20">
-                    <img
-                      src={imagePreview}
-                      alt="Preview"
-                      className="w-full h-full object-cover"
-                    />
+        {/* Floating Input Area */}
+        <div className="fixed bottom-8 left-[340px] right-0 flex justify-center z-50 px-4">
+          <div className="bg-background rounded-[2rem] shadow-lg border p-2 flex items-center gap-2 max-w-3xl w-full relative">
+            <form onSubmit={handleSubmit} className="flex items-center gap-2 w-full pl-2">
+              {/* Image Search Button */}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageSelect}
+                className="hidden"
+                ref={fileInputRef}
+              />
+
+              {imagePreview ? (
+                <div className="relative group shrink-0">
+                  <div className="h-10 w-10 rounded-xl overflow-hidden border">
+                    <img src={imagePreview} className="w-full h-full object-cover" />
                   </div>
                   <button
                     type="button"
                     onClick={removeImage}
-                    className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 hover:bg-destructive/90 shadow-sm"
+                    className="absolute -top-1 -right-1 bg-destructive text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
                   >
                     <X className="h-3 w-3" />
                   </button>
                 </div>
-              )}
-              <div className="flex items-center gap-3">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageSelect}
-                  className="hidden"
-                  ref={fileInputRef}
-                />
-                <Button
+              ) : (
+                <button
                   type="button"
-                  variant="outline"
-                  className="rounded-xl h-12 px-4 border-input hover:bg-accent hover:text-accent-foreground flex items-center gap-2 whitespace-nowrap"
                   onClick={() => fileInputRef.current?.click()}
-                  disabled={isLoading}
+                  className="flex items-center gap-2 px-3 py-2 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-xl transition-colors text-sm font-medium shrink-0"
                 >
                   <Camera className="h-5 w-5" />
-                  <span className="font-medium">Search by image</span>
-                </Button>
+                  <span>Search by image</span>
+                </button>
+              )}
 
-                <div className="flex-1 relative">
-                  <input
-                    type="text"
-                    placeholder="Ask me to find brand assets..."
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault()
-                        handleSubmit(e)
-                      }
-                    }}
-                    disabled={isLoading}
-                    className="w-full h-12 px-4 rounded-xl bg-muted/50 border-0 focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all placeholder:text-muted-foreground"
-                  />
-                </div>
+              {/* Divider */}
+              <div className="h-6 w-px bg-border mx-1"></div>
+
+              {/* Input Field */}
+              <div className="flex-1 relative">
+                <input
+                  type="text"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      handleSubmit(e)
+                    }
+                  }}
+                  placeholder={isListening ? "Listening..." : "Ask me to find brand assets..."}
+                  className="w-full h-11 bg-transparent border-none focus:outline-none text-base placeholder:text-muted-foreground/50"
+                  disabled={isLoading || isThinking}
+                />
+              </div>
+
+              {/* Functional Buttons */}
+              <div className="flex items-center gap-1 pr-1">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className={cn("h-9 w-9 text-muted-foreground hover:text-foreground", isListening && "text-red-500 animate-pulse")}
+                  onClick={toggleListening}
+                >
+                  {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+                </Button>
 
                 <Button
                   type="submit"
-                  disabled={isLoading || (!inputValue.trim() && !selectedImage)}
-                  className="h-12 w-12 rounded-xl bg-slate-800 hover:bg-slate-700 text-white shrink-0 p-0 flex items-center justify-center"
+                  disabled={!inputValue.trim() && !imagePreview}
+                  size="icon"
+                  className="h-9 w-9 rounded-full bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-50"
                 >
-                  <Send className="h-5 w-5" />
+                  <Send className="h-4 w-4" />
                 </Button>
               </div>
             </form>
+
+            <div className="absolute top-full mt-2 w-full text-center">
+              <p className="text-[10px] text-muted-foreground">Brandon can make mistakes. Check important info.</p>
+            </div>
           </div>
         </div>
 
-        {/* Spacer for fixed input */}
-        <div className="h-24" />
 
         {/* Confirmation Dialog */}
         <ConfirmDialog

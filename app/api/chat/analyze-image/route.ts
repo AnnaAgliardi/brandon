@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
         })
 
         candidates.sort((a, b) => b.combinedScore - a.combinedScore)
-        const topCandidates = candidates.slice(0, 10)
+        const topCandidates = candidates.slice(0, 7)
 
         // 7. Generate Response
         console.log('Generating chat response...')

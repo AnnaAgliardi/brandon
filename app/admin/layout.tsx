@@ -30,14 +30,13 @@ export default function AdminLayout({
       }
 
       const { data: roleData } = await supabase
-        .from('user_roles')
+        .from('profiles')
         .select('role')
-        .eq('user_id', user.id)
+        .eq('id', user.id)
         .single()
 
       if (!roleData || roleData.role !== 'admin') {
-        alert('Admin access required')
-        router.push('/')
+        router.push('/dashboard')
         return
       }
 

@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { BrandonAsset } from '@/lib/types'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -9,20 +10,36 @@ interface AssetCardProps {
 }
 
 export function AssetCard({ asset, onPreview }: AssetCardProps) {
+  const [isDownloading, setIsDownloading] = useState(false)
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const previewUrl = asset.preview_path && supabaseUrl
     ? `${supabaseUrl}/storage/v1/object/public/assets-preview/${asset.preview_path}`
     : '/placeholder.png'
 
-  const handleDownload = (e: React.MouseEvent) => {
+  const handleDownload = async (e: React.MouseEvent) => {
     e.stopPropagation()
-    if (!asset.storage_path || !supabaseUrl) return
+    if (!asset.storage_path || !supabaseUrl || isDownloading) return
 
-    const fullUrl = `${supabaseUrl}/storage/v1/object/public/assets-full/${asset.storage_path}`
-    const link = document.createElement('a')
-    link.href = fullUrl
-    link.download = asset.storage_path.split('/').pop() || 'asset.jpg'
-    link.click()
+    try {
+      setIsDownloading(true)
+      const fullUrl = `${supabaseUrl}/storage/v1/object/public/assets-full/${asset.storage_path}`
+
+      const response = await fetch(fullUrl)
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+
+      const link = document.createElement('a')
+      link.href = url
+      link.download = asset.storage_path.split('/').pop() || 'asset.jpg'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error('Error downloading asset:', error)
+    } finally {
+      setIsDownloading(false)
+    }
   }
 
   return (
@@ -55,9 +72,14 @@ export function AssetCard({ asset, onPreview }: AssetCardProps) {
           size="sm"
           className="flex-1 h-8 text-xs"
           onClick={handleDownload}
+          disabled={isDownloading}
         >
-          <Download className="h-3 w-3 mr-2" />
-          Download
+          {isDownloading ? (
+            <span className="animate-spin mr-2">⏳</span>
+          ) : (
+            <Download className="h-3 w-3 mr-2" />
+          )}
+          {isDownloading ? 'Downloading...' : 'Download'}
         </Button>
         {asset.url && (
           <Button asChild variant="outline" size="sm" className="flex-1 h-8 text-xs" onClick={(e) => e.stopPropagation()}>

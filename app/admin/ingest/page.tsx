@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase-browser'
 import { Button } from '@/components/ui/button'
@@ -13,34 +13,29 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Progress } from '@/components/ui/progress'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import {
   ArrowLeft,
-  Upload as UploadIcon,
+  Upload,
   X,
-  CheckCircle,
-  AlertCircle,
   Loader2,
   Link as LinkIcon,
-  Image as ImageIcon,
+  Check,
 } from 'lucide-react'
 import type { AssetMetadata } from '@/lib/types'
+import { cn } from '@/lib/utils'
 
 interface FileItem {
   id: string
   file?: File
   url?: string
-  preview: string
-  name: string
   status: 'pending' | 'uploading' | 'success' | 'error'
-  progress: number
+  progress?: number
   error?: string
   metadata: Partial<AssetMetadata>
 }
 
 const MAX_FILES = 20
-const MAX_FILE_SIZE = 50 * 1024 * 1024 // 50MB
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
 
 export default function BulkIngestPage() {
   const router = useRouter()
@@ -60,132 +55,63 @@ export default function BulkIngestPage() {
     license_type_subscription: 'Standard',
   })
 
-  function generateId() {
-    return Math.random().toString(36).substr(2, 9)
-  }
-
-  function validateFile(file: File): string | null {
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      return 'Invalid file type. Only JPG, PNG, GIF, and WebP are allowed.'
-    }
-    if (file.size > MAX_FILE_SIZE) {
-      return 'File too large. Maximum size is 50MB.'
-    }
-    return null
-  }
-
-  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
-    const selectedFiles = Array.from(e.target.files || [])
-    addFiles(selectedFiles)
-  }
-
-  function addFiles(selectedFiles: File[]) {
-    if (files.length + selectedFiles.length > MAX_FILES) {
-      alert(`Maximum ${MAX_FILES} files allowed`)
-      return
-    }
-
-    const newFiles: FileItem[] = []
-
-    selectedFiles.forEach((file) => {
-      const error = validateFile(file)
-      if (error) {
-        alert(`${file.name}: ${error}`)
-        return
-      }
-
-      const preview = URL.createObjectURL(file)
-      newFiles.push({
-        id: generateId(),
-        file,
-        preview,
-        name: file.name,
-        status: 'pending',
-        progress: 0,
-        metadata: {},
-      })
-    })
-
-    setFiles((prev) => [...prev, ...newFiles])
-  }
-
-  function handleDragOver(e: React.DragEvent) {
+  const onDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault()
     setIsDragging(true)
-  }
+  }, [])
 
-  function handleDragLeave(e: React.DragEvent) {
+  const onDragLeave = useCallback((e: React.DragEvent) => {
     e.preventDefault()
     setIsDragging(false)
-  }
+  }, [])
 
-  function handleDrop(e: React.DragEvent) {
-    e.preventDefault()
-    setIsDragging(false)
+  const addFiles = useCallback((newFiles: File[]) => {
+    const validFiles = newFiles.slice(0, MAX_FILES - files.length)
+    if (validFiles.length === 0) return
 
-    const droppedFiles = Array.from(e.dataTransfer.files)
-    addFiles(droppedFiles)
-  }
-
-  async function handleAddUrl() {
-    if (!urlInput.trim()) return
-
-    if (files.length >= MAX_FILES) {
-      alert(`Maximum ${MAX_FILES} files allowed`)
-      return
-    }
-
-    const newFile: FileItem = {
-      id: generateId(),
-      url: urlInput,
-      preview: urlInput,
-      name: urlInput.split('/').pop() || 'URL Import',
+    const newItems: FileItem[] = validFiles.map((file) => ({
+      id: Math.random().toString(36).substring(7),
+      file,
       status: 'pending',
-      progress: 0,
       metadata: {},
-    }
+    }))
 
-    setFiles((prev) => [...prev, newFile])
+    setFiles((prev) => [...prev, ...newItems])
+  }, [files.length])
+
+  const onDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+    if (e.dataTransfer.files?.length) {
+      addFiles(Array.from(e.dataTransfer.files))
+    }
+  }, [addFiles])
+
+  const handleUrlImport = async () => {
+    if (!urlInput) return
+    const newItems: FileItem[] = [
+      {
+        id: Math.random().toString(36).substring(7),
+        url: urlInput,
+        status: 'pending',
+        metadata: {},
+      },
+    ]
+    setFiles((prev) => [...prev, ...newItems])
     setUrlInput('')
   }
 
-  function removeFile(id: string) {
-    setFiles((prev) => {
-      const file = prev.find((f) => f.id === id)
-      if (file?.preview && file.file) {
-        URL.revokeObjectURL(file.preview)
-      }
-      return prev.filter((f) => f.id !== id)
-    })
+  const removeFile = (id: string) => {
+    setFiles((prev) => prev.filter((f) => f.id !== id))
   }
 
-  function applySharedMetadata() {
-    setFiles((prev) =>
-      prev.map((f) => ({
-        ...f,
-        metadata: { ...sharedMetadata },
-      }))
-    )
-  }
-
-  async function uploadAll() {
-    if (files.length === 0) {
-      alert('No files to upload')
-      return
-    }
-
+  async function handleIngest() {
     setIsUploading(true)
-
-    for (const fileItem of files) {
-      if (fileItem.status === 'success') continue
-
-      try {
-        await uploadSingle(fileItem)
-      } catch (error) {
-        console.error('Upload error:', error)
+    for (const file of files) {
+      if (file.status === 'pending' || file.status === 'error') {
+        await uploadSingle(file)
       }
     }
-
     setIsUploading(false)
   }
 
@@ -239,7 +165,7 @@ export default function BulkIngestPage() {
       const generatedData = await generateRes.json()
 
       // Step 2: Ingest the asset with all data
-      // Build payload, excluding null/undefined optional fields
+      // Build payload
       const ingestPayload: any = {
         storage_path: generatedData.storage_path,
         preview_path: generatedData.preview_path,
@@ -269,8 +195,6 @@ export default function BulkIngestPage() {
       if (metadata.file_name) ingestPayload.file_name = metadata.file_name
       if (metadata.url) ingestPayload.url = metadata.url
       if (metadata.acquired_at) ingestPayload.acquired_at = metadata.acquired_at
-
-      console.log('Ingest payload:', JSON.stringify(ingestPayload, null, 2))
 
       const ingestRes = await fetch('/api/admin/ingest', {
         method: 'POST',
@@ -306,107 +230,194 @@ export default function BulkIngestPage() {
     }
   }
 
-  const pendingCount = files.filter((f) => f.status === 'pending').length
-  const successCount = files.filter((f) => f.status === 'success').length
-  const errorCount = files.filter((f) => f.status === 'error').length
-
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
-        <div className="mb-6">
-          <Button variant="outline" onClick={() => router.push('/admin')}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
+    <div className="min-h-screen bg-[#F8F9FC] pb-20 p-8">
+      <div className="container mx-auto max-w-4xl">
+        <div className="mb-8">
+          <Button
+            variant="outline"
+            onClick={() => router.push('/admin')}
+            className="mb-4 rounded-full bg-white border-muted-foreground/20 hover:bg-white hover:text-primary text-muted-foreground text-xs h-8 px-4"
+          >
+            <ArrowLeft className="h-3 w-3 mr-2" />
             Back to Dashboard
           </Button>
+          <h1 className="text-3xl font-bold tracking-tight text-[#0F172A]">Bulk Asset Ingestion</h1>
+          <p className="text-muted-foreground mt-2">Upload up to 20 files with shared metadata</p>
         </div>
 
-        <h1 className="text-3xl font-bold mb-2">Bulk Asset Ingestion</h1>
-        <p className="text-muted-foreground mb-8">
-          Upload up to {MAX_FILES} files with shared metadata
-        </p>
+        {/* Upload Area */}
+        <Card className="mb-8 border-0 shadow-sm rounded-[2rem] overflow-hidden">
+          <CardHeader className="px-8 pt-8">
+            <CardTitle>Upload Assets</CardTitle>
+            <CardDescription>
+              Drag and drop files here to start (Max 20 files, 50MB each)
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="px-8 pb-8">
+            <div
+              className={cn(
+                "border-2 border-dashed rounded-2xl p-12 text-center transition-all duration-200 cursor-pointer mb-6",
+                isDragging
+                  ? "border-blue-500 bg-blue-50/50"
+                  : "border-slate-200 hover:border-blue-400 hover:bg-slate-50"
+              )}
+              onDragOver={onDragOver}
+              onDragLeave={onDragLeave}
+              onDrop={onDrop}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Upload className="h-6 w-6" />
+              </div>
+              <h3 className="text-lg font-semibold text-slate-900 mb-1">Drag & drop files here</h3>
+              <p className="text-sm text-slate-500 mb-6">
+                or click to browse
+              </p>
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                className="hidden"
+                ref={fileInputRef}
+                onChange={(e) => {
+                  if (e.target.files?.length) {
+                    addFiles(Array.from(e.target.files))
+                  }
+                }}
+              />
+              <Button onClick={(e) => {
+                e.stopPropagation()
+                fileInputRef.current?.click()
+              }} variant="default" className="bg-[#2563EB] hover:bg-[#1d4ed8] rounded-xl h-10 px-6 font-medium shadow-sm">
+                Select Files
+              </Button>
+            </div>
 
-        {/* Drag & Drop Zone */}
-        <div
-          className={`border-2 border-dashed rounded-lg p-12 mb-8 text-center transition-colors ${isDragging
-            ? 'border-primary bg-primary/5'
-            : 'border-muted-foreground/25'
-            }`}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-        >
-          <UploadIcon className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-          <h3 className="text-lg font-semibold mb-2">
-            Drag & drop files here
-          </h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            or click to browse (max {MAX_FILES} files, 50MB each)
-          </p>
-          <input
-            ref={fileInputRef}
-            type="file"
-            multiple
-            accept="image/*"
-            onChange={handleFileSelect}
-            className="hidden"
-          />
-          <Button onClick={() => fileInputRef.current?.click()}>
-            <UploadIcon className="h-4 w-4 mr-2" />
-            Select Files
-          </Button>
-        </div>
-
-        {/* URL Import */}
-        <div className="mb-8 flex gap-2">
-          <div className="flex-1">
-            <Label>Or import from URL</Label>
-            <div className="flex gap-2 mt-1">
+            <div className="flex gap-4 items-center bg-slate-50 p-4 rounded-xl border border-slate-100">
+              <span className="text-sm font-medium text-slate-700 whitespace-nowrap">Or import from URL:</span>
               <Input
                 placeholder="https://example.com/image.jpg"
                 value={urlInput}
                 onChange={(e) => setUrlInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleAddUrl()}
+                className="bg-white border-slate-200 h-10 rounded-lg"
               />
-              <Button onClick={handleAddUrl} variant="outline">
+              <Button onClick={handleUrlImport} disabled={!urlInput} variant="outline" className="h-10 rounded-lg border-slate-200">
                 <LinkIcon className="h-4 w-4 mr-2" />
-                Add URL
+                Add
               </Button>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
-        {/* Shared Metadata */}
         {files.length > 0 && (
-          <div className="mb-8 p-6 border rounded-lg">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Shared Metadata</h3>
-              <Button onClick={applySharedMetadata} size="sm">
-                Apply to All Files
-              </Button>
-            </div>
+          <Card className="mb-8 border-0 shadow-sm rounded-[2rem] overflow-hidden">
+            <CardHeader className="px-8 pt-8">
+              <CardTitle>Files ({files.length})</CardTitle>
+            </CardHeader>
+            <CardContent className="px-8 pb-8">
+              <div className="space-y-3">
+                {files.map((file) => (
+                  <div
+                    key={file.id}
+                    className="flex items-center gap-4 p-3 bg-slate-50 rounded-xl border border-slate-100 group"
+                  >
+                    <div className="h-12 w-12 bg-white rounded-lg border border-slate-200 flex items-center justify-center overflow-hidden shrink-0">
+                      {file.file ? (
+                        <img
+                          src={URL.createObjectURL(file.file)}
+                          className="w-full h-full object-cover"
+                          onLoad={(e) => URL.revokeObjectURL((e.target as HTMLImageElement).src)}
+                        />
+                      ) : (
+                        <img
+                          src={file.url}
+                          alt="preview"
+                          className="w-full h-full object-cover"
+                        />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate text-sm text-slate-900">
+                        {file.file?.name || file.url}
+                      </p>
+                      <div className="flex items-center gap-2 mt-1">
+                        {file.status === 'uploading' && (
+                          <span className="text-xs text-blue-600 flex items-center">
+                            <Loader2 className="h-3 w-3 animate-spin mr-1" /> Uploading...
+                          </span>
+                        )}
+                        {file.status === 'error' && (
+                          <span className="text-xs text-destructive">{file.error}</span>
+                        )}
+                        {file.status === 'success' && (
+                          <span className="text-xs text-green-600 flex items-center">
+                            <Check className="h-3 w-3 mr-1" /> Done
+                          </span>
+                        )}
+                        {file.status === 'pending' && (
+                          <span className="text-xs text-muted-foreground">Ready</span>
+                        )}
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeFile(file.id)}
+                      className="text-slate-400 hover:text-destructive hover:bg-red-50 rounded-lg h-8 w-8"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              {/* Basic Info */}
-              <div>
-                <Label>Brand</Label>
+              <div className="mt-6 flex justify-end">
+                <Button
+                  onClick={handleIngest}
+                  disabled={isUploading || files.length === 0}
+                  className="bg-[#2563EB] hover:bg-[#1d4ed8] text-white rounded-xl shadow-sm px-8 h-10"
+                >
+                  {isUploading && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  {isUploading ? 'Ingesting...' : 'Start Ingestion'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        <Card className="border-0 shadow-sm rounded-[2rem] overflow-hidden">
+          <CardHeader className="px-8 pt-8">
+            <CardTitle>Shared Metadata</CardTitle>
+            <CardDescription>
+              These values will be applied to all uploaded assets
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="px-8 pb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="col-span-2">
+                <Label className="text-sm font-medium text-slate-700 mb-1.5 block">File Name</Label>
                 <Input
-                  value={sharedMetadata.brand || ''}
+                  value={sharedMetadata.file_name || ''}
                   onChange={(e) =>
-                    setSharedMetadata({ ...sharedMetadata, brand: e.target.value })
+                    setSharedMetadata({ ...sharedMetadata, file_name: e.target.value })
                   }
-                  placeholder="Brand name"
+                  placeholder="Optional override"
+                  className="h-11 rounded-xl bg-slate-50 border-slate-200 focus:bg-white transition-colors"
                 />
               </div>
 
               <div>
-                <Label>Status</Label>
+                <Label className="text-sm font-medium text-slate-700 mb-1.5 block">Status</Label>
                 <Select
-                  value={sharedMetadata.status || 'draft'}
-                  onValueChange={(value: any) =>
-                    setSharedMetadata({ ...sharedMetadata, status: value })
+                  value={sharedMetadata.status}
+                  onValueChange={(val: "draft" | "approved" | "archived") =>
+                    setSharedMetadata({ ...sharedMetadata, status: val })
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="h-11 rounded-xl bg-slate-50 border-slate-200 focus:bg-white transition-colors">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -417,20 +428,16 @@ export default function BulkIngestPage() {
                 </Select>
               </div>
 
-              {/* Location Info */}
               <div>
-                <Label>Region</Label>
+                <Label className="text-sm font-medium text-slate-700 mb-1.5 block">Region</Label>
                 <Select
-                  value={sharedMetadata.region_representation || undefined}
-                  onValueChange={(value) =>
-                    setSharedMetadata({
-                      ...sharedMetadata,
-                      region_representation: value,
-                    })
+                  value={sharedMetadata.region_representation || ''}
+                  onValueChange={(val) =>
+                    setSharedMetadata({ ...sharedMetadata, region_representation: val })
                   }
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select region" />
+                  <SelectTrigger className="h-11 rounded-xl bg-slate-50 border-slate-200 focus:bg-white transition-colors">
+                    <SelectValue placeholder="Select" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="AMER">AMER</SelectItem>
@@ -439,314 +446,9 @@ export default function BulkIngestPage() {
                   </SelectContent>
                 </Select>
               </div>
-
-              <div>
-                <Label>Location</Label>
-                <Input
-                  value={sharedMetadata.location || ''}
-                  onChange={(e) =>
-                    setSharedMetadata({ ...sharedMetadata, location: e.target.value })
-                  }
-                  placeholder="City, Country"
-                />
-              </div>
-
-              {/* Campaign & Collection */}
-              <div>
-                <Label>Campaign</Label>
-                <Input
-                  value={sharedMetadata.campaign || ''}
-                  onChange={(e) =>
-                    setSharedMetadata({ ...sharedMetadata, campaign: e.target.value })
-                  }
-                  placeholder="Campaign name"
-                />
-              </div>
-
-              <div>
-                <Label>Collection</Label>
-                <Input
-                  value={sharedMetadata.collection || ''}
-                  onChange={(e) =>
-                    setSharedMetadata({ ...sharedMetadata, collection: e.target.value })
-                  }
-                  placeholder="Collection name"
-                />
-              </div>
-
-              {/* Partners & Clients */}
-              <div>
-                <Label>Partner</Label>
-                <Input
-                  value={sharedMetadata.partner || ''}
-                  onChange={(e) =>
-                    setSharedMetadata({ ...sharedMetadata, partner: e.target.value })
-                  }
-                  placeholder="Partner name"
-                />
-              </div>
-
-              <div>
-                <Label>Client</Label>
-                <Input
-                  value={sharedMetadata.client || ''}
-                  onChange={(e) =>
-                    setSharedMetadata({ ...sharedMetadata, client: e.target.value })
-                  }
-                  placeholder="Client name"
-                />
-              </div>
-
-              {/* IDs & References */}
-              <div>
-                <Label>DAM ID</Label>
-                <Input
-                  value={sharedMetadata.dam_id || ''}
-                  onChange={(e) =>
-                    setSharedMetadata({ ...sharedMetadata, dam_id: e.target.value })
-                  }
-                  placeholder="Digital Asset Management ID"
-                />
-              </div>
-
-              <div>
-                <Label>File Name</Label>
-                <Input
-                  value={sharedMetadata.file_name || ''}
-                  onChange={(e) =>
-                    setSharedMetadata({ ...sharedMetadata, file_name: e.target.value })
-                  }
-                  placeholder="Original filename"
-                />
-              </div>
-
-              {/* URL */}
-              <div className="col-span-2">
-                <Label>Source URL</Label>
-                <Input
-                  value={sharedMetadata.url || ''}
-                  onChange={(e) =>
-                    setSharedMetadata({ ...sharedMetadata, url: e.target.value })
-                  }
-                  placeholder="https://..."
-                />
-              </div>
-
-              {/* Usage Rights */}
-              <div>
-                <Label>Usage Rights</Label>
-                <Select
-                  value={sharedMetadata.usage_rights || 'internal_only'}
-                  onValueChange={(value: any) =>
-                    setSharedMetadata({ ...sharedMetadata, usage_rights: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="internal_only">Internal Only</SelectItem>
-                    <SelectItem value="web_approved">Web Approved</SelectItem>
-                    <SelectItem value="print_approved">Print Approved</SelectItem>
-                    <SelectItem value="all_channels">All Channels</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* License Types */}
-              <div>
-                <Label>License Type (Usage)</Label>
-                <Input
-                  value={sharedMetadata.license_type_usage || 'Creative'}
-                  onChange={(e) =>
-                    setSharedMetadata({
-                      ...sharedMetadata,
-                      license_type_usage: e.target.value,
-                    })
-                  }
-                  placeholder="e.g., Creative"
-                />
-              </div>
-
-              <div>
-                <Label>License Type (Subscription)</Label>
-                <Input
-                  value={sharedMetadata.license_type_subscription || 'Standard'}
-                  onChange={(e) =>
-                    setSharedMetadata({
-                      ...sharedMetadata,
-                      license_type_subscription: e.target.value,
-                    })
-                  }
-                  placeholder="e.g., Standard"
-                />
-              </div>
-
-              {/* Dates */}
-              <div>
-                <Label>Image Purchase Date</Label>
-                <Input
-                  type="date"
-                  value={sharedMetadata.image_purchase_date || ''}
-                  onChange={(e) =>
-                    setSharedMetadata({
-                      ...sharedMetadata,
-                      image_purchase_date: e.target.value,
-                    })
-                  }
-                />
-              </div>
-
-              <div>
-                <Label>Image Capture Date</Label>
-                <Input
-                  type="date"
-                  value={sharedMetadata.image_capture_date || ''}
-                  onChange={(e) =>
-                    setSharedMetadata({
-                      ...sharedMetadata,
-                      image_capture_date: e.target.value,
-                    })
-                  }
-                />
-              </div>
-
-              <div>
-                <Label>Acquired At</Label>
-                <Input
-                  type="date"
-                  value={sharedMetadata.acquired_at || ''}
-                  onChange={(e) =>
-                    setSharedMetadata({
-                      ...sharedMetadata,
-                      acquired_at: e.target.value,
-                    })
-                  }
-                />
-              </div>
             </div>
-          </div>
-        )}
-
-        {/* File Grid */}
-        {files.length > 0 && (
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">
-                Files ({files.length}/{MAX_FILES})
-              </h3>
-              {!isUploading && pendingCount > 0 && (
-                <Button onClick={uploadAll}>
-                  <UploadIcon className="h-4 w-4 mr-2" />
-                  Upload All ({pendingCount})
-                </Button>
-              )}
-            </div>
-
-            {/* Stats */}
-            {(successCount > 0 || errorCount > 0) && (
-              <div className="flex gap-4 mb-4 text-sm">
-                {successCount > 0 && (
-                  <span className="text-green-600">
-                    ✓ {successCount} successful
-                  </span>
-                )}
-                {errorCount > 0 && (
-                  <span className="text-destructive">✗ {errorCount} failed</span>
-                )}
-              </div>
-            )}
-
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {files.map((fileItem) => (
-                <div
-                  key={fileItem.id}
-                  className="border rounded-lg overflow-hidden relative"
-                >
-                  {/* Remove button */}
-                  {fileItem.status === 'pending' && (
-                    <button
-                      onClick={() => removeFile(fileItem.id)}
-                      className="absolute top-2 right-2 z-10 bg-background/80 rounded-full p-1 hover:bg-background"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  )}
-
-                  {/* Preview */}
-                  <div className="aspect-square relative bg-muted">
-                    <img
-                      src={fileItem.preview}
-                      alt={fileItem.name}
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
-
-                  {/* Info */}
-                  <div className="p-3">
-                    <p className="text-xs font-medium truncate mb-2">
-                      {fileItem.name}
-                    </p>
-
-                    {/* Status */}
-                    {fileItem.status === 'pending' && (
-                      <div className="text-xs text-muted-foreground">
-                        Ready to upload
-                      </div>
-                    )}
-
-                    {fileItem.status === 'uploading' && (
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-xs">
-                          <Loader2 className="h-3 w-3 animate-spin" />
-                          Uploading...
-                        </div>
-                        <Progress value={50} className="h-1" />
-                      </div>
-                    )}
-
-                    {fileItem.status === 'success' && (
-                      <div className="flex items-center gap-2 text-xs text-green-600">
-                        <CheckCircle className="h-3 w-3" />
-                        Uploaded
-                      </div>
-                    )}
-
-                    {fileItem.status === 'error' && (
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2 text-xs text-destructive">
-                          <AlertCircle className="h-3 w-3" />
-                          Failed
-                        </div>
-                        {fileItem.error && (
-                          <p className="text-xs text-destructive">
-                            {fileItem.error}
-                          </p>
-                        )}
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="w-full mt-2"
-                          onClick={() => uploadSingle(fileItem)}
-                        >
-                          Retry
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Empty State */}
-        {files.length === 0 && (
-          <div className="text-center py-12 text-muted-foreground">
-            <ImageIcon className="h-16 w-16 mx-auto mb-4 opacity-20" />
-            <p>No files selected. Drag files or click above to get started.</p>
-          </div>
-        )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   )
