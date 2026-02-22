@@ -240,13 +240,15 @@ export default function BulkIngestPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8F9FC] pb-20 p-8">
-      <div className="container mx-auto max-w-4xl">
+    <div className="min-h-screen bg-[#F8F9FC] pb-20 p-8 relative overflow-hidden">
+      <div className="absolute top-6 right-8 h-72 w-72 rounded-full bg-blue-400/10 blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-10 left-0 h-96 w-96 rounded-full bg-indigo-400/10 blur-[120px] pointer-events-none" />
+      <div className="container mx-auto max-w-4xl relative">
         <div className="mb-8">
           <Button
             variant="outline"
             onClick={() => router.push('/admin')}
-            className="mb-4 rounded-full bg-white border-muted-foreground/20 hover:bg-white hover:text-primary text-muted-foreground text-xs h-8 px-4"
+            className="mb-4 rounded-full bg-white/80 backdrop-blur border-blue-200 hover:bg-blue-50 hover:text-primary text-muted-foreground text-xs h-9 px-5"
           >
             <ArrowLeft className="h-3 w-3 mr-2" />
             Back to Dashboard
@@ -256,7 +258,7 @@ export default function BulkIngestPage() {
         </div>
 
         {/* Upload Area */}
-        <Card className="mb-8 border-0 shadow-sm rounded-[2rem] overflow-hidden">
+        <Card className="mb-8 rounded-[2rem] overflow-hidden border-blue-100 bg-white/75 backdrop-blur">
           <CardHeader className="px-8 pt-8">
             <CardTitle>Upload Assets</CardTitle>
             <CardDescription>
@@ -298,7 +300,7 @@ export default function BulkIngestPage() {
               <Button onClick={(e) => {
                 e.stopPropagation()
                 fileInputRef.current?.click()
-              }} variant="default" className="bg-[#2563EB] hover:bg-[#1d4ed8] rounded-xl h-10 px-6 font-medium shadow-sm">
+              }} variant="default" className="bg-[#2563EB] hover:bg-[#1d4ed8] rounded-xl h-10 px-6 font-medium">
                 Select Files
               </Button>
             </div>
@@ -320,7 +322,7 @@ export default function BulkIngestPage() {
         </Card>
 
         {files.length > 0 && (
-          <Card className="mb-8 border-0 shadow-sm rounded-[2rem] overflow-hidden">
+          <Card className="mb-8 rounded-[2rem] overflow-hidden border-blue-100 bg-white/75 backdrop-blur">
             <CardHeader className="px-8 pt-8">
               <CardTitle>Files ({files.length})</CardTitle>
             </CardHeader>
@@ -385,7 +387,7 @@ export default function BulkIngestPage() {
                 <Button
                   onClick={handleIngest}
                   disabled={isUploading || files.length === 0}
-                  className="bg-[#2563EB] hover:bg-[#1d4ed8] text-white rounded-xl shadow-sm px-8 h-10"
+                  className="bg-[#2563EB] hover:bg-[#1d4ed8] text-white rounded-xl px-8 h-10"
                 >
                   {isUploading && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -397,7 +399,7 @@ export default function BulkIngestPage() {
           </Card>
         )}
 
-        <Card className="border-0 shadow-sm rounded-[2rem] overflow-hidden">
+        <Card className="rounded-[2rem] overflow-hidden border-blue-100 bg-white/75 backdrop-blur">
           <CardHeader className="px-8 pt-8">
             <CardTitle>Shared Metadata</CardTitle>
             <CardDescription>

@@ -9,15 +9,17 @@ export default function AdminDashboard() {
   const router = useRouter()
 
   return (
-    <div className="min-h-screen bg-[#F8F9FC] p-8">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-[#F8F9FC] p-8 relative overflow-hidden">
+      <div className="absolute top-0 right-0 h-[380px] w-[380px] rounded-full bg-blue-400/15 blur-[90px] pointer-events-none" />
+      <div className="absolute bottom-0 left-0 h-[420px] w-[420px] rounded-full bg-indigo-400/15 blur-[110px] pointer-events-none" />
+      <div className="max-w-6xl mx-auto relative">
         {/* Header */}
         <div className="flex flex-col gap-6 mb-12">
           <div>
             <Button
               variant="outline"
               onClick={() => router.push('/chat')}
-              className="rounded-full bg-white border-muted-foreground/20 hover:bg-white hover:text-primary text-muted-foreground text-xs h-8 px-4"
+              className="rounded-full bg-white/80 backdrop-blur border-blue-200 hover:bg-blue-50 hover:text-primary text-muted-foreground text-xs h-9 px-5 transition-colors"
             >
               <ArrowLeft className="h-3 w-3 mr-2" />
               Back to Chat
@@ -25,7 +27,7 @@ export default function AdminDashboard() {
           </div>
 
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-[#0F172A]">Admin Dashboard</h1>
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-[#0F172A]">Admin Dashboard</h1>
             <p className="text-muted-foreground mt-2 text-lg">Manage your brand assets, users, and system settings.</p>
           </div>
         </div>
@@ -87,9 +89,9 @@ function DashboardCard({
   primary
 }: any) {
   return (
-    <Card className="border-0 shadow-sm rounded-3xl overflow-hidden hover:shadow-md transition-all duration-200 group bg-white">
+    <Card className="rounded-3xl overflow-hidden transition-all duration-300 group bg-white/70 backdrop-blur border-blue-100 hover:bg-white hover:-translate-y-1">
       <CardHeader className="pb-4 pt-8 px-8">
-        <div className="mb-6 w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+        <div className="mb-6 w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
           {icon}
         </div>
         <CardTitle className="text-xl font-bold text-[#0F172A]">{title}</CardTitle>
@@ -106,7 +108,7 @@ function DashboardCard({
           className={cn(
             "rounded-xl h-12 px-6 font-medium transition-all",
             primary
-              ? "bg-[#2563EB] hover:bg-[#1d4ed8] text-white shadow-sm hover:shadow-md w-auto"
+              ? "bg-[#2563EB] hover:bg-[#1d4ed8] text-white w-auto"
               : "bg-white border hover:bg-slate-50 text-slate-900 w-auto border-slate-200"
           )}
           variant={primary ? 'default' : 'outline'}

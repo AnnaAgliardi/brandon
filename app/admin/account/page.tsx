@@ -172,10 +172,16 @@ export default function AccountPage() {
     }
 
     return (
-        <div className="min-h-screen bg-background">
-            <div className="container mx-auto px-4 py-8 max-w-2xl">
+        <div className="min-h-screen bg-[#F8F9FC] relative overflow-hidden">
+            <div className="absolute top-12 right-10 h-72 w-72 rounded-full bg-blue-400/10 blur-[90px] pointer-events-none" />
+            <div className="absolute bottom-10 left-0 h-80 w-80 rounded-full bg-indigo-400/10 blur-[100px] pointer-events-none" />
+            <div className="container mx-auto px-4 py-8 max-w-2xl relative">
                 <div className="mb-6">
-                    <Button variant="outline" onClick={() => router.push('/admin')}>
+                    <Button
+                        variant="outline"
+                        onClick={() => router.push('/admin')}
+                        className="rounded-full bg-white/80 backdrop-blur border-blue-200 hover:bg-blue-50"
+                    >
                         <ArrowLeft className="h-4 w-4 mr-2" />
                         Back to Dashboard
                     </Button>
@@ -185,7 +191,7 @@ export default function AccountPage() {
 
                 <div className="space-y-8">
                     {/* Profile Section */}
-                    <Card>
+                    <Card className="bg-white/75 backdrop-blur border-blue-100">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                 <User className="h-5 w-5" />
@@ -229,7 +235,7 @@ export default function AccountPage() {
                     </Card>
 
                     {/* Password Section */}
-                    <Card>
+                    <Card className="bg-white/75 backdrop-blur border-blue-100">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                 <Lock className="h-5 w-5" />
@@ -276,7 +282,7 @@ export default function AccountPage() {
                     </Card>
 
                     {/* Danger Zone */}
-                    <Card className="border-destructive/50">
+                    <Card className="border-destructive/40 bg-white/75 backdrop-blur">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2 text-destructive">
                                 <Trash2 className="h-5 w-5" />

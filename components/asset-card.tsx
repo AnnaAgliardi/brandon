@@ -44,7 +44,7 @@ export function AssetCard({ asset, onPreview }: AssetCardProps) {
 
   return (
     <Card
-      className="w-64 flex-shrink-0 cursor-pointer hover:shadow-md transition-shadow"
+      className="w-64 flex-shrink-0 cursor-pointer border-blue-100 bg-white/80 backdrop-blur transition-all duration-300 hover:border-blue-200"
       onClick={() => onPreview?.(asset)}
     >
       <CardHeader className="p-0">

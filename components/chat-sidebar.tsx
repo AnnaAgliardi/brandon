@@ -82,14 +82,14 @@ export function ChatSidebar({
     )
 
     return (
-        <div className="flex flex-col w-80 bg-background border-r h-[100dvh] sticky top-0 flex-shrink-0">
+        <div className="flex flex-col w-80 bg-background/90 backdrop-blur border-r border-blue-100 h-[100dvh] sticky top-0 flex-shrink-0">
             {/* Header Area */}
             <div className="p-4 space-y-4">
                 <h2 className="font-semibold text-lg px-1">Chats</h2>
 
                 <Button
                     onClick={onNewChat}
-                    className="w-full bg-[#2563EB] hover:bg-[#1d4ed8] text-white rounded-lg h-10 gap-2 justify-center font-medium shadow-sm transition-all"
+                    className="w-full bg-[#2563EB] hover:bg-[#1d4ed8] text-white rounded-lg h-10 gap-2 justify-center font-medium transition-all"
                 >
                     <div className="border bg-white/20 rounded-sm p-[1px]">
                         <Plus className="h-3 w-3" />

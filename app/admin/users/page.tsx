@@ -200,10 +200,16 @@ export default function UsersPage() {
     }
 
     return (
-        <div className="min-h-screen bg-background">
-            <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <div className="min-h-screen bg-[#F8F9FC] relative overflow-hidden">
+            <div className="absolute top-10 right-10 h-72 w-72 rounded-full bg-blue-400/10 blur-[100px] pointer-events-none" />
+            <div className="absolute bottom-0 left-10 h-80 w-80 rounded-full bg-indigo-400/10 blur-[110px] pointer-events-none" />
+            <div className="container mx-auto px-4 py-8 max-w-6xl relative">
                 <div className="mb-6">
-                    <Button variant="outline" onClick={() => router.push('/admin')}>
+                    <Button
+                        variant="outline"
+                        onClick={() => router.push('/admin')}
+                        className="rounded-full bg-white/80 backdrop-blur border-blue-200 hover:bg-blue-50"
+                    >
                         <ArrowLeft className="h-4 w-4 mr-2" />
                         Back to Dashboard
                     </Button>
@@ -216,7 +222,7 @@ export default function UsersPage() {
                     </div>
                 </div>
 
-                <div className="border rounded-lg">
+                <div className="border border-blue-100 rounded-2xl bg-white/70 backdrop-blur overflow-hidden">
                     <Table>
                         <TableHeader>
                             <TableRow>

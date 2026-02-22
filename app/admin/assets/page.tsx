@@ -336,14 +336,16 @@ export default function AssetsManagerPage() {
     }
 
     return (
-        <div className="min-h-screen bg-[#F8F9FC] pb-20 p-8">
-            <div className="container mx-auto max-w-7xl">
+        <div className="min-h-screen bg-[#F8F9FC] pb-20 p-8 relative overflow-hidden">
+            <div className="absolute top-10 right-6 h-80 w-80 rounded-full bg-blue-400/10 blur-[120px] pointer-events-none" />
+            <div className="absolute bottom-10 left-2 h-[420px] w-[420px] rounded-full bg-indigo-400/10 blur-[130px] pointer-events-none" />
+            <div className="container mx-auto max-w-7xl relative">
                 <div className="mb-8 flex flex-col gap-6">
                     <div>
                         <Button
                             variant="outline"
                             onClick={() => router.push('/admin')}
-                            className="rounded-full bg-white border-muted-foreground/20 hover:bg-white hover:text-primary text-muted-foreground text-xs h-8 px-4"
+                            className="rounded-full bg-white/80 backdrop-blur border-blue-200 hover:bg-blue-50 hover:text-primary text-muted-foreground text-xs h-9 px-5"
                         >
                             <ArrowLeft className="h-3 w-3 mr-2" />
                             Back to Dashboard
@@ -366,25 +368,25 @@ export default function AssetsManagerPage() {
 
                 {/* Stats */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                    <Card className="border-0 shadow-sm rounded-2xl bg-white">
+                    <Card className="rounded-2xl bg-white/75 backdrop-blur border-blue-100">
                         <CardContent className="p-6">
                             <p className="text-sm font-medium text-muted-foreground mb-2">Total Assets</p>
                             <p className="text-3xl font-bold text-[#0F172A]">{stats.total}</p>
                         </CardContent>
                     </Card>
-                    <Card className="border-0 shadow-sm rounded-2xl bg-white">
+                    <Card className="rounded-2xl bg-white/75 backdrop-blur border-blue-100">
                         <CardContent className="p-6">
                             <p className="text-sm font-medium text-muted-foreground mb-2">Draft</p>
                             <p className="text-3xl font-bold text-yellow-600">{stats.draft}</p>
                         </CardContent>
                     </Card>
-                    <Card className="border-0 shadow-sm rounded-2xl bg-white">
+                    <Card className="rounded-2xl bg-white/75 backdrop-blur border-blue-100">
                         <CardContent className="p-6">
                             <p className="text-sm font-medium text-muted-foreground mb-2">Approved</p>
                             <p className="text-3xl font-bold text-green-600">{stats.approved}</p>
                         </CardContent>
                     </Card>
-                    <Card className="border-0 shadow-sm rounded-2xl bg-white">
+                    <Card className="rounded-2xl bg-white/75 backdrop-blur border-blue-100">
                         <CardContent className="p-6">
                             <p className="text-sm font-medium text-muted-foreground mb-2">Archived</p>
                             <p className="text-3xl font-bold text-slate-500">{stats.archived}</p>
@@ -393,7 +395,7 @@ export default function AssetsManagerPage() {
                 </div>
 
                 {/* Controls Bar */}
-                <div className="mb-8 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between bg-white p-4 rounded-2xl shadow-sm">
+                <div className="mb-8 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between bg-white/75 backdrop-blur p-4 rounded-2xl border border-blue-100">
                     <div className="flex gap-4 items-center w-full md:w-auto">
                         <div className="relative w-full md:w-64">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -519,13 +521,13 @@ export default function AssetsManagerPage() {
                                 <div
                                     key={asset.id}
                                     className={cn(
-                                        "group relative bg-white rounded-2xl overflow-hidden border border-transparent shadow-sm hover:shadow-lg transition-all duration-200 cursor-pointer",
-                                        selectedIds.includes(asset.id) ? "ring-2 ring-blue-500 border-transparent shadow-md" : "hover:border-slate-200"
+                                        "group relative bg-white/80 backdrop-blur rounded-2xl overflow-hidden border border-blue-100 transition-all duration-200 cursor-pointer",
+                                        selectedIds.includes(asset.id) ? "ring-2 ring-blue-500 border-transparent" : "hover:border-blue-200"
                                     )}
                                     onClick={() => handleAssetClick(asset)}
                                 >
                                     <div className="absolute top-3 left-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200 data-[state=checked]:opacity-100" data-state={selectedIds.includes(asset.id) ? 'checked' : 'unchecked'}>
-                                        <div onClick={(e) => e.stopPropagation()} className="bg-white/90 backdrop-blur-sm rounded-lg p-1 shadow-sm">
+                                        <div onClick={(e) => e.stopPropagation()} className="bg-white/90 backdrop-blur-sm rounded-lg p-1 border border-blue-100">
                                             <Checkbox
                                                 checked={selectedIds.includes(asset.id)}
                                                 onCheckedChange={() => toggleSelectAsset(asset.id)}
@@ -543,7 +545,7 @@ export default function AssetsManagerPage() {
 
                                         <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                                             <span className={cn(
-                                                "px-2 py-1 rounded-md text-xs font-semibold shadow-sm backdrop-blur-md",
+                                                "px-2 py-1 rounded-md text-xs font-semibold backdrop-blur-md",
                                                 asset.status === 'approved' ? "bg-green-500/90 text-white" :
                                                     asset.status === 'draft' ? "bg-yellow-500/90 text-white" :
                                                         "bg-slate-500/90 text-white"
@@ -582,7 +584,7 @@ export default function AssetsManagerPage() {
                                 <img
                                     src={getFullUrl(selectedAsset.storage_path)}
                                     alt="Full preview"
-                                    className="max-w-full max-h-[500px] object-contain shadow-lg rounded-lg"
+                                    className="max-w-full max-h-[500px] object-contain rounded-lg border border-white/70"
                                 />
                             )}
                             <Button

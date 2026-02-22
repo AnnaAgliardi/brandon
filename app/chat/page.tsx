@@ -468,7 +468,9 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="min-h-screen flex bg-background font-sans">
+    <div className="min-h-screen flex bg-background font-sans relative overflow-hidden">
+      <div className="absolute top-0 right-0 h-[420px] w-[420px] rounded-full bg-blue-400/10 blur-[130px] pointer-events-none" />
+      <div className="absolute bottom-0 left-[22rem] h-[420px] w-[420px] rounded-full bg-indigo-400/10 blur-[130px] pointer-events-none" />
       {/* Sidebar */}
       <ChatSidebar
         currentSessionId={currentSessionId}
@@ -510,7 +512,7 @@ export default function ChatPage() {
             {/* Empty State / Welcome */}
             {messages.length === 0 && (
               <div className="flex-1 flex flex-col items-center justify-center -mt-20">
-                <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-3xl flex items-center justify-center mb-8 shadow-sm">
+                <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-3xl border border-blue-100 flex items-center justify-center mb-8">
                   <Bot className="w-10 h-10" strokeWidth={2.5} />
                 </div>
 
@@ -528,25 +530,25 @@ export default function ChatPage() {
                     onClick={() => {
                       setInputValue("Find the images about the last campaign")
                     }}
-                    className="p-6 rounded-2xl border border-slate-100 bg-white hover:shadow-md hover:border-slate-200 transition-all duration-200 text-left flex items-center h-24 group"
+                    className="p-6 rounded-2xl border border-blue-100 bg-white/75 backdrop-blur hover:border-blue-200 transition-all duration-200 text-left flex items-center h-24 group"
                   >
                     <span className="text-sm font-medium text-slate-600 group-hover:text-blue-600 transition-colors">&quot;Find the images about the last campaign&quot;</span>
                   </button>
                   <button
                     onClick={() => setInputValue("Show me images with digital cockpit and GPS")}
-                    className="p-6 rounded-2xl border border-slate-100 bg-white hover:shadow-md hover:border-slate-200 transition-all duration-200 text-left flex items-center h-24 group"
+                    className="p-6 rounded-2xl border border-blue-100 bg-white/75 backdrop-blur hover:border-blue-200 transition-all duration-200 text-left flex items-center h-24 group"
                   >
                     <span className="text-sm font-medium text-slate-600 group-hover:text-blue-600 transition-colors">&quot;Show me images with digital cockpit and GPS&quot;</span>
                   </button>
                   <button
                     onClick={() => setInputValue("Search images with trucks on the highway")}
-                    className="p-6 rounded-2xl border border-slate-100 bg-white hover:shadow-md hover:border-slate-200 transition-all duration-200 text-left flex items-center h-24 group"
+                    className="p-6 rounded-2xl border border-blue-100 bg-white/75 backdrop-blur hover:border-blue-200 transition-all duration-200 text-left flex items-center h-24 group"
                   >
                     <span className="text-sm font-medium text-slate-600 group-hover:text-blue-600 transition-colors">&quot;Search images with trucks on the highway&quot;</span>
                   </button>
                   <button
                     onClick={() => setInputValue("Find images of EV car and charging point")}
-                    className="p-6 rounded-2xl border border-slate-100 bg-white hover:shadow-md hover:border-slate-200 transition-all duration-200 text-left flex items-center h-24 group"
+                    className="p-6 rounded-2xl border border-blue-100 bg-white/75 backdrop-blur hover:border-blue-200 transition-all duration-200 text-left flex items-center h-24 group"
                   >
                     <span className="text-sm font-medium text-slate-600 group-hover:text-blue-600 transition-colors">&quot;Find images of EV car and charging point&quot;</span>
                   </button>
@@ -562,7 +564,7 @@ export default function ChatPage() {
                     <div className="flex justify-end">
                       <div className="flex flex-col items-end gap-2 max-w-2xl">
                         {(message.image || message.image_url) && (
-                          <div className="rounded-2xl overflow-hidden border bg-muted max-w-[200px] shadow-sm">
+                          <div className="rounded-2xl overflow-hidden border border-blue-100 bg-muted max-w-[200px]">
                             <img
                               src={
                                 message.image ||
@@ -625,7 +627,7 @@ export default function ChatPage() {
 
         {/* Floating Input Area */}
         <div className="fixed bottom-8 left-[340px] right-0 flex justify-center z-50 px-4">
-          <div className="bg-background rounded-[2rem] shadow-lg border p-2 flex items-center gap-2 max-w-3xl w-full relative">
+          <div className="bg-background/90 backdrop-blur rounded-[2rem] border border-blue-100 p-2 flex items-center gap-2 max-w-3xl w-full relative">
             <form onSubmit={handleSubmit} className="flex items-center gap-2 w-full pl-2">
               {/* Image Search Button */}
               <input
