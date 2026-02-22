@@ -172,20 +172,34 @@ export default function MemberAccountPage() {
     }
 
     return (
-        <div className="min-h-screen bg-background">
-            <div className="container mx-auto px-4 py-8 max-w-2xl">
+        <div className="min-h-screen bg-[#F8F9FC] relative overflow-hidden">
+            <div className="absolute top-8 right-8 h-72 w-72 rounded-full bg-blue-400/10 blur-[100px] pointer-events-none" />
+            <div className="absolute bottom-8 left-2 h-80 w-80 rounded-full bg-indigo-400/10 blur-[120px] pointer-events-none" />
+
+            <div className="container mx-auto px-4 py-8 max-w-2xl relative">
                 <div className="mb-6">
-                    <Button variant="outline" onClick={() => router.push('/dashboard')}>
+                    <Button
+                        variant="outline"
+                        onClick={() => router.push('/dashboard')}
+                        className="rounded-full bg-white/80 backdrop-blur border-blue-200 hover:bg-blue-50"
+                    >
                         <ArrowLeft className="h-4 w-4 mr-2" />
                         Back to Dashboard
                     </Button>
                 </div>
 
-                <h1 className="text-3xl font-bold mb-8">Account Manager</h1>
+                <div className="mb-8">
+                    <p className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 mb-3">
+                        Account settings
+                    </p>
+                    <h1 className="text-3xl font-bold tracking-tight">
+                        Account <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Manager</span>
+                    </h1>
+                </div>
 
                 <div className="space-y-8">
                     {/* Profile Section */}
-                    <Card>
+                    <Card className="rounded-3xl bg-white/75 backdrop-blur border-blue-100">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                 <User className="h-5 w-5" />
@@ -229,7 +243,7 @@ export default function MemberAccountPage() {
                     </Card>
 
                     {/* Password Section */}
-                    <Card>
+                    <Card className="rounded-3xl bg-white/75 backdrop-blur border-blue-100">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                 <Lock className="h-5 w-5" />
@@ -276,7 +290,7 @@ export default function MemberAccountPage() {
                     </Card>
 
                     {/* Danger Zone */}
-                    <Card className="border-destructive/50">
+                    <Card className="rounded-3xl border-destructive/50 bg-white/75 backdrop-blur">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2 text-destructive">
                                 <Trash2 className="h-5 w-5" />

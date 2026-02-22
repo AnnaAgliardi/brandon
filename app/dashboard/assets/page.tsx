@@ -141,35 +141,47 @@ export default function MemberAssetsPage() {
     }
 
     return (
-        <div className="min-h-screen bg-background">
-            <div className="container mx-auto px-4 py-8">
+        <div className="min-h-screen bg-[#F8F9FC] relative overflow-hidden">
+            <div className="absolute top-6 right-6 h-72 w-72 rounded-full bg-blue-400/10 blur-[110px] pointer-events-none" />
+            <div className="absolute bottom-6 left-2 h-80 w-80 rounded-full bg-indigo-400/10 blur-[120px] pointer-events-none" />
+
+            <div className="container mx-auto px-4 py-8 relative">
                 <div className="mb-6">
-                    <Button variant="outline" onClick={() => router.push('/dashboard')}>
+                    <Button
+                        variant="outline"
+                        onClick={() => router.push('/dashboard')}
+                        className="rounded-full bg-white/80 backdrop-blur border-blue-200 hover:bg-blue-50"
+                    >
                         <ArrowLeft className="h-4 w-4 mr-2" />
                         Back to Dashboard
                     </Button>
                 </div>
 
-                <h1 className="text-3xl font-bold mb-2">Asset Manager</h1>
+                <p className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 mb-3">
+                    Member library
+                </p>
+                <h1 className="text-3xl font-bold mb-2">
+                    Asset <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Manager</span>
+                </h1>
                 <p className="text-muted-foreground mb-8">
                     Browse and download brand assets
                 </p>
 
                 {error && (
-                    <div className="mb-6 p-4 bg-destructive/10 text-destructive rounded-lg">
+                    <div className="mb-6 p-4 bg-destructive/10 text-destructive rounded-2xl border border-destructive/20">
                         {error}
                     </div>
                 )}
 
                 {/* Filters */}
-                <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4 rounded-3xl border border-blue-100 bg-white/75 backdrop-blur p-4">
                     <div>
                         <Label>Status Filter</Label>
                         <Select
                             value={statusFilter || undefined}
                             onValueChange={setStatusFilter}
                         >
-                            <SelectTrigger>
+                            <SelectTrigger className="bg-white/90">
                                 <SelectValue placeholder="All Statuses" />
                             </SelectTrigger>
                             <SelectContent>
@@ -186,6 +198,7 @@ export default function MemberAssetsPage() {
                             placeholder="Filter by brand name"
                             value={brandFilter}
                             onChange={(e) => setBrandFilter(e.target.value)}
+                            className="bg-white/90"
                         />
                     </div>
                 </div>
@@ -196,13 +209,16 @@ export default function MemberAssetsPage() {
                         <Loader2 className="h-8 w-8 animate-spin" />
                     </div>
                 ) : assets.length === 0 ? (
-                    <div className="text-center py-12 text-muted-foreground">
+                    <div className="text-center py-12 text-muted-foreground rounded-3xl border border-blue-100 bg-white/70 backdrop-blur">
                         No assets found.
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                         {assets.map((asset) => (
-                            <div key={asset.id} className="border rounded-lg overflow-hidden hover:shadow-lg transition-shadow relative">
+                            <div
+                                key={asset.id}
+                                className="border border-blue-100 rounded-2xl overflow-hidden bg-white/80 backdrop-blur transition-all duration-300 hover:-translate-y-1 relative"
+                            >
                                 <div
                                     className="cursor-pointer"
                                     onClick={() => handleAssetClick(asset)}
@@ -218,7 +234,7 @@ export default function MemberAssetsPage() {
                                         </p>
                                         <div className="flex flex-wrap gap-2 text-xs">
                                             {asset.brand && (
-                                                <span className="bg-secondary px-2 py-1 rounded">
+                                                <span className="bg-secondary px-2 py-1 rounded-md">
                                                     {asset.brand}
                                                 </span>
                                             )}
@@ -248,7 +264,7 @@ export default function MemberAssetsPage() {
 
             {/* Preview Modal */}
             <Dialog open={!!selectedAsset} onOpenChange={closePreview}>
-                <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+                <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto rounded-3xl bg-white/95 backdrop-blur border-blue-100">
                     <DialogHeader>
                         <DialogTitle>Asset Details</DialogTitle>
                         <DialogDescription>
@@ -259,7 +275,7 @@ export default function MemberAssetsPage() {
                     {selectedAsset && (
                         <div className="space-y-6">
                             {/* Image Preview */}
-                            <div className="border rounded-lg p-4">
+                            <div className="border border-blue-100 rounded-2xl p-4 bg-white/80">
                                 <img
                                     src={getFullUrl(selectedAsset.storage_path)}
                                     alt="Full preview"
