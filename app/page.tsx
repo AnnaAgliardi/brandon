@@ -23,12 +23,6 @@ export default function LandingPage() {
 
           <div className="relative container px-4 pt-24 pb-24 md:pt-32 md:pb-32 lg:pt-40 lg:pb-40">
             <div className="mx-auto max-w-4xl text-center space-y-8">
-              {/* Badge */}
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/50 text-blue-600 text-sm font-medium mb-4 shadow-sm backdrop-blur-sm animate-in fade-in slide-in-from-bottom-4 duration-700">
-                <Zap className="h-4 w-4 fill-blue-600" />
-                <span>The future of Digital Asset Management</span>
-              </div>
-
               <h1 className="text-5xl font-bold tracking-tight sm:text-6xl md:text-7xl lg:text-[5rem] animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100 fill-mode-both">
                 Find brand assets with{' '}
                 <span className="relative whitespace-nowrap">
@@ -319,69 +313,6 @@ export default function LandingPage() {
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </section>
-
-        {/* How it works */}
-        <section className="relative bg-muted/30 overflow-hidden">
-          <div className="absolute top-0 right-1/4 w-[400px] h-[400px] bg-blue-400/10 blur-[100px] rounded-full pointer-events-none mix-blend-multiply" />
-          <div className="absolute bottom-0 left-1/4 w-[500px] h-[500px] bg-indigo-400/10 blur-[120px] rounded-full pointer-events-none" />
-          
-          <div className="relative container px-4 py-24 md:py-32 border-t border-white/50">
-            <div className="text-center mb-16 md:mb-24 animate-in fade-in slide-in-from-bottom-8 duration-700 fill-mode-both">
-              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-6">
-                How it works
-              </h2>
-              <p className="text-muted-foreground text-lg md:text-xl max-w-2xl mx-auto">
-                From upload to discovery in three simple steps.
-              </p>
-            </div>
-
-            <div className="grid md:grid-cols-3 gap-12 max-w-5xl mx-auto">
-              {[
-                {
-                  step: '1',
-                  icon: ImageIcon,
-                  title: 'Upload assets',
-                  description:
-                    'Admins upload images. AI automatically analyzes each one — generating descriptions, tags, mood, and composition data.',
-                },
-                {
-                  step: '2',
-                  icon: Zap,
-                  title: 'AI indexes everything',
-                  description:
-                    'Each asset is embedded as a semantic vector and stored for instant retrieval. Metadata enriches every search.',
-                },
-                {
-                  step: '3',
-                  icon: MessageSquare,
-                  title: 'Search with conversation',
-                  description:
-                    'Ask Brandon in natural language. Get ranked results combining relevance and recency — the right asset, every time.',
-                },
-              ].map((item, index) => (
-                <div 
-                  key={item.step} 
-                  className="group relative text-center space-y-6 animate-in fade-in slide-in-from-bottom-10 duration-700 fill-mode-both"
-                  style={{ animationDelay: `${(index + 1) * 200}ms` }}
-                >
-                  <div className="absolute top-8 left-1/2 -translate-x-1/2 w-20 h-20 bg-blue-400/20 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-                  
-                  <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center mx-auto text-xl font-bold shadow-[0_0_30px_-5px_rgba(37,99,235,0.4)] group-hover:shadow-[0_0_40px_-5px_rgba(37,99,235,0.6)] transition-all duration-500 group-hover:-translate-y-2 group-hover:scale-110">
-                    <item.icon className="w-8 h-8 absolute opacity-20 group-hover:opacity-0 transition-opacity duration-300" />
-                    <span className="relative z-10 group-hover:scale-110 transition-transform duration-300">{item.step}</span>
-                  </div>
-                  
-                  <div className="space-y-4 pt-2 relative">
-                    <h3 className="text-xl font-bold group-hover:text-blue-600 transition-colors duration-300">{item.title}</h3>
-                    <p className="text-muted-foreground leading-relaxed px-4 group-hover:text-foreground/80 transition-colors duration-300">
-                      {item.description}
-                    </p>
-                  </div>
-                </div>
-              ))}
             </div>
           </div>
         </section>

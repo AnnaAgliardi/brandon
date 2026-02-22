@@ -17,7 +17,6 @@ import {
   Camera,
   Mic,
   MicOff,
-  Bot
 } from 'lucide-react'
 import { ChatSidebar } from '@/components/chat-sidebar'
 import { cn } from '@/lib/utils'
@@ -516,22 +515,18 @@ export default function ChatPage() {
 
             {/* Empty State / Welcome */}
             {messages.length === 0 && (
-              <div className="flex-1 flex flex-col items-center justify-center -mt-20">
-                <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-3xl border border-blue-100 flex items-center justify-center mb-8">
-                  <Bot className="w-10 h-10" strokeWidth={2.5} />
-                </div>
-
-                <h2 className="text-4xl font-bold mb-4 tracking-tight text-center text-[#0F172A]">
+              <div className="flex-1 flex flex-col items-center justify-center pt-12 md:pt-16">
+                <h2 className="text-4xl font-bold mb-3 tracking-tight text-center text-[#0F172A]">
                   Welcome to{' '}
                   <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Brandon</span>
                 </h2>
-                <p className="text-slate-500 text-lg mb-16 text-center max-w-lg leading-relaxed">
+                <p className="text-slate-500 text-lg mb-12 text-center max-w-xl leading-relaxed">
                   Your AI-powered brand asset assistant. Ask me to find
                   images or any questions about the brand identity.
                 </p>
 
                 {/* Suggested Queries Grid */}
-                <div className="grid grid-cols-2 gap-4 w-full max-w-3xl">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-3xl">
                   <button
                     onClick={() => {
                       setInputValue("Find the images about the last campaign")
