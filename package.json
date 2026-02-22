@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:fix": "ulimit -n 10240 2>/dev/null || true && next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"

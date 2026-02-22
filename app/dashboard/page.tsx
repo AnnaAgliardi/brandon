@@ -18,14 +18,14 @@ export default function DashboardPage() {
                             Welcome back! Access your tools and settings below.
                         </p>
                     </div>
-                    <Button variant="outline" onClick={() => router.push('/')}>
+                    <Button variant="outline" onClick={() => router.push('/chat')}>
                         <ArrowLeft className="h-4 w-4 mr-2" />
                         Back to Chat
                     </Button>
                 </div>
 
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push('/')}>
+                    <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push('/chat')}>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                 <MessageSquare className="h-5 w-5" />

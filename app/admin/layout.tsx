@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase-browser'
+import { getSupabaseClientOrNull } from '@/lib/supabase-browser'
 
 export default function AdminLayout({
   children,
@@ -10,15 +10,20 @@ export default function AdminLayout({
   children: React.ReactNode
 }) {
   const router = useRouter()
-  const supabase = createClient()
+  const supabase = getSupabaseClientOrNull()
   const [isAuthorized, setIsAuthorized] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
+    if (!supabase) {
+      router.push('/login')
+      return
+    }
     checkAdminAccess()
-  }, [])
+  }, [supabase])
 
   async function checkAdminAccess() {
+    if (!supabase) return
     try {
       const {
         data: { user },
@@ -43,7 +48,7 @@ export default function AdminLayout({
       setIsAuthorized(true)
     } catch (error) {
       console.error('Error checking admin access:', error)
-      router.push('/')
+      router.push('/chat')
     } finally {
       setIsLoading(false)
     }

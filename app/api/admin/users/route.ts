@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { requireAdmin } from '@/lib/auth-helpers'
 
-// Initialize Supabase Admin Client (Service Role)
-const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+function getSupabaseAdmin() {
+    return createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+}
 
 export async function GET(request: NextRequest) {
     try {
@@ -22,6 +23,8 @@ export async function GET(request: NextRequest) {
             { global: { headers: { Authorization: authHeader } } }
         )
         await requireAdmin(supabase)
+
+        const supabaseAdmin = getSupabaseAdmin()
 
         // Fetch all users from Auth (requires service role)
         const { data: { users }, error: usersError } = await supabaseAdmin.auth.admin.listUsers()
@@ -84,6 +87,8 @@ export async function DELETE(request: NextRequest) {
             return NextResponse.json({ error: 'Cannot delete your own account' }, { status: 400 })
         }
 
+        const supabaseAdmin = getSupabaseAdmin()
+
         // Delete user
         const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(user_id)
 
@@ -124,6 +129,8 @@ export async function PATCH(request: NextRequest) {
         if (user_id === adminUser.id && role !== 'admin') {
             return NextResponse.json({ error: 'Cannot change your own role' }, { status: 400 })
         }
+
+        const supabaseAdmin = getSupabaseAdmin()
 
         // Update role in user_roles table
         const { error: updateError } = await supabaseAdmin

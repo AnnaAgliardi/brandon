@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase-browser'
+import { getSupabaseClientOrNull } from '@/lib/supabase-browser'
 import { Button } from '@/components/ui/button'
 import {
     Table,
@@ -60,7 +60,7 @@ interface UserData {
 
 export default function UsersPage() {
     const router = useRouter()
-    const supabase = createClient()
+    const supabase = getSupabaseClientOrNull()
     const [users, setUsers] = useState<UserData[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [currentUser, setCurrentUser] = useState<any>(null)
@@ -75,10 +75,15 @@ export default function UsersPage() {
     const [isDeleting, setIsDeleting] = useState(false)
 
     useEffect(() => {
+        if (!supabase) {
+            router.push('/login')
+            return
+        }
         loadUsers()
-    }, [])
+    }, [supabase])
 
     async function loadUsers() {
+        if (!supabase) return
         try {
             const {
                 data: { session },
@@ -118,7 +123,7 @@ export default function UsersPage() {
         try {
             const {
                 data: { session },
-            } = await supabase.auth.getSession()
+            } = await supabase!.auth.getSession()
 
             if (!session) return
 
@@ -150,13 +155,13 @@ export default function UsersPage() {
     }
 
     async function handleDeleteUser() {
-        if (!deletingUser) return
+        if (!deletingUser || !supabase) return
 
         setIsDeleting(true)
         try {
             const {
                 data: { session },
-            } = await supabase.auth.getSession()
+            } = await supabase!.auth.getSession()
 
             if (!session) return
 
@@ -186,7 +191,7 @@ export default function UsersPage() {
         }
     }
 
-    if (isLoading) {
+    if (!supabase || isLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />

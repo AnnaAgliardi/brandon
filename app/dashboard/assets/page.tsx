@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase-browser'
+import { getSupabaseClientOrNull } from '@/lib/supabase-browser'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -46,7 +46,7 @@ interface Asset {
 
 export default function MemberAssetsPage() {
     const router = useRouter()
-    const supabase = createClient()
+    const supabase = getSupabaseClientOrNull()
 
     const [assets, setAssets] = useState<Asset[]>([])
     const [loading, setLoading] = useState(true)
@@ -60,11 +60,16 @@ export default function MemberAssetsPage() {
     const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null)
 
     useEffect(() => {
+        if (!supabase) {
+            router.push('/login')
+            return
+        }
         loadAssets()
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [statusFilter, brandFilter])
+    }, [supabase, statusFilter, brandFilter])
 
     async function loadAssets() {
+        if (!supabase) return
         try {
             setLoading(true)
             const {
@@ -126,6 +131,14 @@ export default function MemberAssetsPage() {
 
     const getFullUrl = (path: string) =>
         `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/assets-full/${path}`
+
+    if (!supabase) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+        )
+    }
 
     return (
         <div className="min-h-screen bg-background">

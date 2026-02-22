@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase-browser'
+import { getSupabaseClientOrNull } from '@/lib/supabase-browser'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -58,7 +58,7 @@ interface Asset {
 
 export default function AssetsManagerPage() {
     const router = useRouter()
-    const supabase = createClient()
+    const supabase = getSupabaseClientOrNull()
 
     const [assets, setAssets] = useState<Asset[]>([])
     const [loading, setLoading] = useState(true)
@@ -88,11 +88,16 @@ export default function AssetsManagerPage() {
     const [isBulkUpdating, setIsBulkUpdating] = useState(false)
 
     useEffect(() => {
+        if (!supabase) {
+            router.push('/login')
+            return
+        }
         loadAssets()
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [statusFilter, brandFilter])
+    }, [supabase, statusFilter, brandFilter])
 
     async function loadAssets() {
+        if (!supabase) return
         try {
             setLoading(true)
             const {
@@ -137,7 +142,7 @@ export default function AssetsManagerPage() {
     }
 
     async function handleSaveChanges() {
-        if (!selectedAsset) return
+        if (!selectedAsset || !supabase) return
 
         setIsSaving(true)
         try {
@@ -198,7 +203,7 @@ export default function AssetsManagerPage() {
     }
 
     async function handleDelete() {
-        if (!deletingId) return
+        if (!deletingId || !supabase) return
 
         try {
             const {
@@ -238,7 +243,7 @@ export default function AssetsManagerPage() {
     }
 
     async function handleBulkUpdate() {
-        if (!bulkAction || !bulkValue || selectedIds.length === 0) return
+        if (!bulkAction || !bulkValue || selectedIds.length === 0 || !supabase) return
 
         setIsBulkUpdating(true)
         try {
@@ -279,7 +284,7 @@ export default function AssetsManagerPage() {
     }
 
     async function handleBulkDelete() {
-        if (selectedIds.length === 0) return
+        if (selectedIds.length === 0 || !supabase) return
 
         setIsBulkDeleting(true)
         try {
@@ -320,6 +325,14 @@ export default function AssetsManagerPage() {
         draft: assets.filter((a) => a.status === 'draft').length,
         approved: assets.filter((a) => a.status === 'approved').length,
         archived: assets.filter((a) => a.status === 'archived').length,
+    }
+
+    if (!supabase) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+        )
     }
 
     return (

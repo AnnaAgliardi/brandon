@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase-browser'
+import { getSupabaseClientOrNull } from '@/lib/supabase-browser'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -29,7 +29,7 @@ import { toast } from 'sonner'
 
 export default function MemberAccountPage() {
     const router = useRouter()
-    const supabase = createClient()
+    const supabase = getSupabaseClientOrNull()
     const [isLoading, setIsLoading] = useState(true)
     const [user, setUser] = useState<any>(null)
 
@@ -48,10 +48,15 @@ export default function MemberAccountPage() {
     const [isDeleting, setIsDeleting] = useState(false)
 
     useEffect(() => {
+        if (!supabase) {
+            router.push('/login')
+            return
+        }
         loadUser()
-    }, [])
+    }, [supabase])
 
     async function loadUser() {
+        if (!supabase) return
         try {
             const {
                 data: { user },
@@ -72,6 +77,7 @@ export default function MemberAccountPage() {
 
     async function handleUpdateProfile(e: React.FormEvent) {
         e.preventDefault()
+        if (!supabase) return
         setIsUpdatingProfile(true)
 
         try {
@@ -100,6 +106,7 @@ export default function MemberAccountPage() {
 
     async function handleUpdatePassword(e: React.FormEvent) {
         e.preventDefault()
+        if (!supabase) return
         if (password !== confirmPassword) {
             toast.error('Passwords do not match')
             return
@@ -125,6 +132,7 @@ export default function MemberAccountPage() {
     }
 
     async function handleDeleteAccount() {
+        if (!supabase) return
         setIsDeleting(true)
         try {
             const {
@@ -155,7 +163,7 @@ export default function MemberAccountPage() {
         }
     }
 
-    if (isLoading) {
+    if (!supabase || isLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />

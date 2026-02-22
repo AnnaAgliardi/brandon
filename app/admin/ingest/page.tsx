@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase-browser'
+import { getSupabaseClientOrNull } from '@/lib/supabase-browser'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -39,7 +39,7 @@ const MAX_FILES = 20
 
 export default function BulkIngestPage() {
   const router = useRouter()
-  const supabase = createClient()
+  const supabase = getSupabaseClientOrNull()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [files, setFiles] = useState<FileItem[]>([])
@@ -124,6 +124,7 @@ export default function BulkIngestPage() {
     )
 
     try {
+      if (!supabase) throw new Error('Not configured')
       const {
         data: { session },
       } = await supabase.auth.getSession()
@@ -228,6 +229,14 @@ export default function BulkIngestPage() {
         )
       )
     }
+  }
+
+  if (!supabase) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
   }
 
   return (

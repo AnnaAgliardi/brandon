@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="500" viewBox="0 0 800 500" fill="none">
+  <rect width="800" height="500" fill="#f5f5f5"/>
+  <rect x="1" y="1" width="798" height="498" stroke="#e5e5e5" stroke-width="1" rx="8" fill="none"/>
+  <text x="400" y="255" font-family="system-ui, sans-serif" font-size="18" fill="#737373" text-anchor="middle">Product screenshot</text>
+  <text x="400" y="280" font-family="system-ui, sans-serif" font-size="14" fill="#a3a3a3" text-anchor="middle">Replace with your app screenshot</text>
+</svg>

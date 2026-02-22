@@ -16,7 +16,7 @@ export default function AdminDashboard() {
           <div>
             <Button
               variant="outline"
-              onClick={() => router.push('/')}
+              onClick={() => router.push('/chat')}
               className="rounded-full bg-white border-muted-foreground/20 hover:bg-white hover:text-primary text-muted-foreground text-xs h-8 px-4"
             >
               <ArrowLeft className="h-3 w-3 mr-2" />
