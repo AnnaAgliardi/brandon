@@ -16,37 +16,52 @@ export default function LandingPage() {
       <main className="flex-1">
         {/* Hero */}
         <section className="relative overflow-hidden">
+          {/* Background effects */}
           <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-indigo-50/50 to-background pointer-events-none" />
-          <div className="relative container px-4 pt-20 pb-24 md:pt-28 md:pb-32 lg:pt-36 lg:pb-40">
+          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-blue-400/20 blur-[120px] rounded-full pointer-events-none" />
+          <div className="absolute top-1/3 left-1/4 w-[400px] h-[400px] bg-indigo-400/20 blur-[100px] rounded-full pointer-events-none mix-blend-multiply" />
+
+          <div className="relative container px-4 pt-24 pb-24 md:pt-32 md:pb-32 lg:pt-40 lg:pb-40">
             <div className="mx-auto max-w-4xl text-center space-y-8">
-              <h1 className="text-5xl font-bold tracking-tight sm:text-6xl md:text-7xl">
+              {/* Badge */}
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/50 text-blue-600 text-sm font-medium mb-4 shadow-sm backdrop-blur-sm animate-in fade-in slide-in-from-bottom-4 duration-700">
+                <Zap className="h-4 w-4 fill-blue-600" />
+                <span>The future of Digital Asset Management</span>
+              </div>
+
+              <h1 className="text-5xl font-bold tracking-tight sm:text-6xl md:text-7xl lg:text-[5rem] animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100 fill-mode-both">
                 Find brand assets with{' '}
-                <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                  natural language
+                <span className="relative whitespace-nowrap">
+                  <span className="absolute bg-blue-600/20 blur-xl inset-0 rounded-full" />
+                  <span className="relative bg-gradient-to-r from-blue-600 via-indigo-500 to-indigo-600 bg-clip-text text-transparent">
+                    natural language
+                  </span>
                 </span>
               </h1>
-              <p className="text-lg text-muted-foreground md:text-xl leading-relaxed max-w-2xl mx-auto">
+              <p className="text-lg text-muted-foreground md:text-xl leading-relaxed max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-6 duration-700 delay-200 fill-mode-both">
                 Brandon is your AI assistant for Digital Asset Management.
                 Ask in plain English and get the right visuals instantly — built for
                 marketing, PR, and corporate communications teams.
               </p>
-              <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
-                <Button asChild size="lg" className="h-12 px-8 rounded-full bg-blue-600 hover:bg-blue-700 text-base">
+              <div className="flex flex-wrap items-center justify-center gap-4 pt-4 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300 fill-mode-both">
+                <Button asChild size="lg" className="group h-14 px-8 rounded-full bg-blue-600 hover:bg-blue-700 text-base shadow-[0_0_40px_-10px_rgba(37,99,235,0.4)] hover:shadow-[0_0_60px_-15px_rgba(37,99,235,0.6)] transition-all duration-300 hover:-translate-y-0.5">
                   <Link href="/signup">
                     Get started
-                    <ArrowRight className="ml-2 h-4 w-4" />
+                    <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                   </Link>
                 </Button>
-                <Button asChild variant="outline" size="lg" className="h-12 px-8 rounded-full text-base">
+                <Button asChild variant="outline" size="lg" className="h-14 px-8 rounded-full text-base border-blue-200 hover:bg-blue-50/50 hover:text-blue-700 transition-all duration-300 hover:-translate-y-0.5">
                   <Link href="/login">Log in</Link>
                 </Button>
               </div>
             </div>
 
             {/* Hero Mockup */}
-            <div className="mt-16 md:mt-20 mx-auto max-w-4xl">
-              <div className="rounded-2xl border bg-background shadow-2xl shadow-blue-500/10 overflow-hidden">
-                <div className="flex items-center gap-2 px-4 py-3 border-b bg-muted/30">
+            <div className="mt-16 md:mt-24 mx-auto max-w-4xl relative z-10 animate-in fade-in slide-in-from-bottom-10 duration-700 delay-500 fill-mode-both">
+              <div className="relative group">
+                <div className="absolute -inset-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-3xl blur opacity-20 group-hover:opacity-30 transition duration-1000 group-hover:duration-200"></div>
+                <div className="relative rounded-2xl border bg-background shadow-2xl overflow-hidden">
+                  <div className="flex items-center gap-2 px-4 py-3 border-b bg-muted/30">
                   <div className="flex gap-1.5">
                     <div className="w-3 h-3 rounded-full bg-red-400/80" />
                     <div className="w-3 h-3 rounded-full bg-yellow-400/80" />
