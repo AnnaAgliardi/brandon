@@ -2,10 +2,6 @@ import Link from 'next/link'
 import { LandingNav } from '@/components/landing-nav'
 import { Button } from '@/components/ui/button'
 import {
-  Search,
-  Sparkles,
-  Clock,
-  Shield,
   ArrowRight,
   MessageSquare,
   ImageIcon,
@@ -116,10 +112,7 @@ export default function LandingPage() {
 
             <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
               {/* Natural language search */}
-              <div className="group rounded-2xl border bg-card p-8 hover:shadow-lg transition-all duration-300">
-                <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                  <Search className="h-6 w-6" />
-                </div>
+              <div className="group rounded-2xl border bg-card p-6 md:p-7 hover:shadow-lg transition-all duration-300">
                 <h3 className="text-xl font-semibold mb-3">Natural language search</h3>
                 <p className="text-muted-foreground leading-relaxed mb-6">
                   Ask in plain English — &quot;Show me the latest autonomous driving
@@ -144,10 +137,7 @@ export default function LandingPage() {
               </div>
 
               {/* AI-powered analysis */}
-              <div className="group rounded-2xl border bg-card p-8 hover:shadow-lg transition-all duration-300">
-                <div className="w-12 h-12 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                  <Sparkles className="h-6 w-6" />
-                </div>
+              <div className="group rounded-2xl border bg-card p-6 md:p-7 hover:shadow-lg transition-all duration-300">
                 <h3 className="text-xl font-semibold mb-3">AI-powered analysis</h3>
                 <p className="text-muted-foreground leading-relaxed mb-6">
                   Every uploaded image is analyzed by AI to generate rich
@@ -179,10 +169,7 @@ export default function LandingPage() {
               </div>
 
               {/* Recency-aware ranking */}
-              <div className="group rounded-2xl border bg-card p-8 hover:shadow-lg transition-all duration-300">
-                <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                  <Clock className="h-6 w-6" />
-                </div>
+              <div className="group rounded-2xl border bg-card p-6 md:p-7 hover:shadow-lg transition-all duration-300">
                 <h3 className="text-xl font-semibold mb-3">Recency-aware ranking</h3>
                 <p className="text-muted-foreground leading-relaxed mb-6">
                   Results blend semantic similarity with acquisition date. Ask for
@@ -217,10 +204,7 @@ export default function LandingPage() {
               </div>
 
               {/* Role-based access */}
-              <div className="group rounded-2xl border bg-card p-8 hover:shadow-lg transition-all duration-300">
-                <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                  <Shield className="h-6 w-6" />
-                </div>
+              <div className="group rounded-2xl border bg-card p-6 md:p-7 hover:shadow-lg transition-all duration-300">
                 <h3 className="text-xl font-semibold mb-3">Role-based access</h3>
                 <p className="text-muted-foreground leading-relaxed mb-6">
                   Admins ingest and manage assets; everyone else can search and
