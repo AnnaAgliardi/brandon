@@ -354,7 +354,12 @@ export default function AssetsManagerPage() {
 
                     <div className="flex justify-between items-end">
                         <div>
-                            <h1 className="text-3xl font-bold tracking-tight text-[#0F172A]">Asset Manager</h1>
+                            <p className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 mb-3">
+                                Library overview
+                            </p>
+                            <h1 className="text-3xl font-bold tracking-tight text-[#0F172A]">
+                                Asset <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Manager</span>
+                            </h1>
                             <p className="text-muted-foreground mt-2">Manage and organize your brand assets</p>
                         </div>
                     </div>

@@ -187,11 +187,18 @@ export default function AccountPage() {
                     </Button>
                 </div>
 
-                <h1 className="text-3xl font-bold mb-8">Account Manager</h1>
+                <div className="mb-8">
+                    <p className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 mb-3">
+                        Account settings
+                    </p>
+                    <h1 className="text-3xl font-bold tracking-tight">
+                        Account <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Manager</span>
+                    </h1>
+                </div>
 
                 <div className="space-y-8">
                     {/* Profile Section */}
-                    <Card className="bg-white/75 backdrop-blur border-blue-100">
+                    <Card className="bg-white/75 backdrop-blur border-blue-100 rounded-3xl">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                 <User className="h-5 w-5" />
@@ -235,7 +242,7 @@ export default function AccountPage() {
                     </Card>
 
                     {/* Password Section */}
-                    <Card className="bg-white/75 backdrop-blur border-blue-100">
+                    <Card className="bg-white/75 backdrop-blur border-blue-100 rounded-3xl">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                 <Lock className="h-5 w-5" />
@@ -282,7 +289,7 @@ export default function AccountPage() {
                     </Card>
 
                     {/* Danger Zone */}
-                    <Card className="border-destructive/40 bg-white/75 backdrop-blur">
+                    <Card className="border-destructive/40 bg-white/75 backdrop-blur rounded-3xl">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2 text-destructive">
                                 <Trash2 className="h-5 w-5" />

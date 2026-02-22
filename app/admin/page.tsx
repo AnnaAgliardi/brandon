@@ -27,7 +27,12 @@ export default function AdminDashboard() {
           </div>
 
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-[#0F172A]">Admin Dashboard</h1>
+            <p className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 mb-3">
+              Control center
+            </p>
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-[#0F172A]">
+              Admin <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Dashboard</span>
+            </h1>
             <p className="text-muted-foreground mt-2 text-lg">Manage your brand assets, users, and system settings.</p>
           </div>
         </div>

@@ -37,7 +37,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { ArrowLeft, Loader2, MoreHorizontal, Shield, Trash2, UserCog } from 'lucide-react'
+import { ArrowLeft, Loader2, MoreHorizontal, Trash2, UserCog } from 'lucide-react'
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -216,16 +216,23 @@ export default function UsersPage() {
                 </div>
 
                 <div className="flex items-center justify-between mb-8">
-                    <h1 className="text-3xl font-bold">Manage Users</h1>
+                    <div>
+                        <p className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 mb-3">
+                            User administration
+                        </p>
+                        <h1 className="text-3xl font-bold tracking-tight">
+                            Manage <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Users</span>
+                        </h1>
+                    </div>
                     <div className="text-sm text-muted-foreground">
                         Total Users: {users.length}
                     </div>
                 </div>
 
-                <div className="border border-blue-100 rounded-2xl bg-white/70 backdrop-blur overflow-hidden">
+                <div className="rounded-3xl border border-blue-100 bg-white/75 backdrop-blur overflow-hidden">
                     <Table>
                         <TableHeader>
-                            <TableRow>
+                            <TableRow className="bg-blue-50/50">
                                 <TableHead>Email</TableHead>
                                 <TableHead>Role</TableHead>
                                 <TableHead>Joined</TableHead>
@@ -235,7 +242,7 @@ export default function UsersPage() {
                         </TableHeader>
                         <TableBody>
                             {users.map((user) => (
-                                <TableRow key={user.id}>
+                                <TableRow key={user.id} className="hover:bg-blue-50/40">
                                     <TableCell>
                                         <div className="font-medium">{user.email}</div>
                                     </TableCell>
@@ -262,7 +269,7 @@ export default function UsersPage() {
                                     <TableCell className="text-right">
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" size="icon">
+                                                <Button variant="ghost" size="icon" className="rounded-full hover:bg-blue-50">
                                                     <MoreHorizontal className="h-4 w-4" />
                                                 </Button>
                                             </DropdownMenuTrigger>

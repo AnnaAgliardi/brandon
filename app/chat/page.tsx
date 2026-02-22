@@ -483,7 +483,12 @@ export default function ChatPage() {
         <header className="absolute top-0 right-0 left-0 z-10 p-6 flex justify-between items-start pointer-events-none">
           {/* Left side title - aligned with content */}
           <div className="pointer-events-auto">
-            <h1 className="text-xl font-bold tracking-tight">Brandon</h1>
+            <p className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50/80 px-3 py-1 text-xs font-medium text-blue-700 mb-2 backdrop-blur">
+              AI Asset Assistant
+            </p>
+            <h1 className="text-xl font-bold tracking-tight">
+              Brandon
+            </h1>
           </div>
 
           {/* Right side controls */}
@@ -492,7 +497,7 @@ export default function ChatPage() {
               variant="ghost"
               size="sm"
               onClick={() => router.push(userRole === 'admin' ? '/admin' : '/dashboard')}
-              className="text-muted-foreground hover:text-foreground gap-2"
+              className="text-muted-foreground hover:text-foreground gap-2 rounded-full border border-blue-100 bg-white/70 backdrop-blur px-4"
             >
               <div className="grid grid-cols-2 gap-[1px] w-3.5 h-3.5 opacity-70">
                 <div className="bg-current rounded-[1px]"></div>
@@ -517,7 +522,8 @@ export default function ChatPage() {
                 </div>
 
                 <h2 className="text-4xl font-bold mb-4 tracking-tight text-center text-[#0F172A]">
-                  Welcome to Brandon
+                  Welcome to{' '}
+                  <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Brandon</span>
                 </h2>
                 <p className="text-slate-500 text-lg mb-16 text-center max-w-lg leading-relaxed">
                   Your AI-powered brand asset assistant. Ask me to find
