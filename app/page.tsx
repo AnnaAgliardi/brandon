@@ -306,7 +306,7 @@ export default function LandingPage() {
                 <div className="flex flex-wrap items-center justify-center gap-4">
                   <Button asChild size="lg" className="h-12 px-8 rounded-full bg-blue-600 hover:bg-blue-700 text-base">
                     <Link href="/signup">
-                      Get started free
+                      Get started
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
