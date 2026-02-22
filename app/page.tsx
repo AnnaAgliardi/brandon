@@ -23,10 +23,6 @@ export default function LandingPage() {
           <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-indigo-50/50 to-background pointer-events-none" />
           <div className="relative container px-4 pt-20 pb-24 md:pt-28 md:pb-32 lg:pt-36 lg:pb-40">
             <div className="mx-auto max-w-4xl text-center space-y-8">
-              <div className="inline-flex items-center gap-2 rounded-full border bg-background/80 backdrop-blur px-4 py-1.5 text-sm text-muted-foreground">
-                <Sparkles className="h-3.5 w-3.5 text-blue-600" />
-                AI-powered brand asset management
-              </div>
               <h1 className="text-5xl font-bold tracking-tight sm:text-6xl md:text-7xl">
                 Find brand assets with{' '}
                 <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
@@ -101,28 +97,6 @@ export default function LandingPage() {
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Built for */}
-        <section className="border-t border-b bg-muted/20">
-          <div className="container px-4 py-12">
-            <p className="text-center text-sm font-medium text-muted-foreground mb-8 tracking-wide uppercase">
-              Built for automotive &amp; technology brands
-            </p>
-            <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-4 text-muted-foreground/60">
-              {[
-                'Corporate Communications',
-                'Marketing Campaigns',
-                'Press & PR',
-                'Annual Reports',
-                'Social Media',
-              ].map((item) => (
-                <span key={item} className="text-sm font-medium">
-                  {item}
-                </span>
-              ))}
             </div>
           </div>
         </section>
