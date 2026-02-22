@@ -131,13 +131,16 @@ export default function LandingPage() {
         </section>
 
         {/* Features */}
-        <section id="features" className="bg-background">
-          <div className="container px-4 py-20 md:py-28">
-            <div className="text-center mb-16 md:mb-20">
-              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl mb-4">
+        <section id="features" className="bg-background relative overflow-hidden">
+          <div className="absolute top-1/2 right-0 w-[500px] h-[500px] bg-indigo-400/10 blur-[120px] rounded-full pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-[600px] h-[400px] bg-blue-400/10 blur-[100px] rounded-full pointer-events-none" />
+          
+          <div className="relative container px-4 py-24 md:py-32">
+            <div className="text-center mb-16 md:mb-24 animate-in fade-in slide-in-from-bottom-8 duration-700 fill-mode-both">
+              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-6">
                 Everything you need to manage brand assets
               </h2>
-              <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              <p className="text-muted-foreground text-lg md:text-xl max-w-2xl mx-auto">
                 From AI-powered search to smart ranking, Brandon understands
                 your content and your team&apos;s needs.
               </p>
@@ -145,56 +148,76 @@ export default function LandingPage() {
 
             <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
               {/* Natural language search */}
-              <div className="group rounded-2xl border bg-card p-6 md:p-7 hover:shadow-lg transition-all duration-300">
-                <h3 className="text-xl font-semibold mb-3">Natural language search</h3>
-                <p className="text-muted-foreground leading-relaxed mb-6">
-                  Ask in plain English — &quot;Show me the latest autonomous driving
-                  visuals&quot; or &quot;Find images with digital cockpit and GPS.&quot; No tags
-                  or keywords required.
-                </p>
-                <div className="rounded-xl bg-muted/50 border p-4 space-y-3">
-                  <div className="flex justify-end">
-                    <div className="bg-white rounded-full px-3 py-1.5 text-xs border shadow-sm">
-                      &quot;Find EV charging visuals&quot;
+              <div className="group relative animate-in fade-in slide-in-from-bottom-10 duration-700 delay-100 fill-mode-both">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-400/0 to-indigo-400/0 rounded-3xl blur opacity-0 group-hover:from-blue-400/20 group-hover:to-indigo-400/20 group-hover:opacity-100 transition duration-500"></div>
+                <div className="relative rounded-2xl border bg-card/50 backdrop-blur-sm p-6 md:p-8 hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-500 h-full flex flex-col">
+                  <h3 className="text-xl font-bold mb-3 flex items-center gap-2">
+                    <MessageSquare className="w-5 h-5 text-blue-500" />
+                    Natural language search
+                  </h3>
+                  <p className="text-muted-foreground leading-relaxed mb-8 flex-1">
+                    Ask in plain English — &quot;Show me the latest autonomous driving
+                    visuals&quot; or &quot;Find images with digital cockpit and GPS.&quot; No tags
+                    or keywords required.
+                  </p>
+                  <div className="rounded-xl bg-background/50 border p-5 space-y-4 shadow-inner">
+                    <div className="flex justify-end transform transition-transform group-hover:-translate-y-1 duration-500">
+                      <div className="bg-blue-600 text-white rounded-2xl rounded-tr-sm px-4 py-2 text-sm shadow-md">
+                        &quot;Find EV charging visuals&quot;
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px] font-bold">
-                      B
-                    </div>
-                    <div className="bg-white rounded-full px-3 py-1.5 text-xs border shadow-sm">
-                      Found 12 matching assets...
+                    <div className="flex items-start gap-3 transform transition-transform group-hover:translate-y-1 duration-500 delay-100">
+                      <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0 text-sm font-bold shadow-sm">
+                        B
+                      </div>
+                      <div className="bg-white rounded-2xl rounded-tl-sm px-4 py-2 text-sm border shadow-sm w-full">
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <div className="flex gap-1">
+                            <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce"></span>
+                            <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce delay-75"></span>
+                            <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce delay-150"></span>
+                          </div>
+                          Searching assets...
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* AI-powered analysis */}
-              <div className="group rounded-2xl border bg-card p-6 md:p-7 hover:shadow-lg transition-all duration-300">
-                <h3 className="text-xl font-semibold mb-3">AI-powered analysis</h3>
-                <p className="text-muted-foreground leading-relaxed mb-6">
-                  Every uploaded image is analyzed by AI to generate rich
-                  descriptions — subjects, mood, setting, composition — so every
-                  asset is findable.
-                </p>
-                <div className="rounded-xl bg-muted/50 border p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-violet-100 to-violet-50 border flex items-center justify-center shrink-0">
-                      <ImageIcon className="h-5 w-5 text-violet-300" />
-                    </div>
-                    <div className="space-y-1.5 min-w-0">
-                      <div className="text-xs font-medium truncate">
-                        Urban EV charging station
+              <div className="group relative animate-in fade-in slide-in-from-bottom-10 duration-700 delay-200 fill-mode-both">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-violet-400/0 to-fuchsia-400/0 rounded-3xl blur opacity-0 group-hover:from-violet-400/20 group-hover:to-fuchsia-400/20 group-hover:opacity-100 transition duration-500"></div>
+                <div className="relative rounded-2xl border bg-card/50 backdrop-blur-sm p-6 md:p-8 hover:shadow-xl hover:shadow-violet-500/5 transition-all duration-500 h-full flex flex-col">
+                  <h3 className="text-xl font-bold mb-3 flex items-center gap-2">
+                    <Zap className="w-5 h-5 text-violet-500" />
+                    AI-powered analysis
+                  </h3>
+                  <p className="text-muted-foreground leading-relaxed mb-8 flex-1">
+                    Every uploaded image is analyzed by AI to generate rich
+                    descriptions — subjects, mood, setting, composition — so every
+                    asset is findable.
+                  </p>
+                  <div className="rounded-xl bg-background/50 border p-5 shadow-inner">
+                    <div className="flex items-center gap-4 transform transition-all group-hover:scale-[1.02] duration-500">
+                      <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-violet-100 to-fuchsia-50 border flex items-center justify-center shrink-0 shadow-inner">
+                        <ImageIcon className="h-6 w-6 text-violet-500" />
                       </div>
-                      <div className="flex flex-wrap gap-1">
-                        {['futuristic', 'urban', 'sustainable'].map((tag) => (
-                          <span
-                            key={tag}
-                            className="inline-flex px-2 py-0.5 rounded-full bg-violet-50 text-violet-600 text-[10px] font-medium"
-                          >
-                            {tag}
-                          </span>
-                        ))}
+                      <div className="space-y-2.5 min-w-0 flex-1">
+                        <div className="h-2 w-24 bg-muted rounded-full"></div>
+                        <div className="text-sm font-semibold truncate">
+                          Urban EV charging station
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {['futuristic', 'urban', 'sustainable'].map((tag) => (
+                            <span
+                              key={tag}
+                              className="inline-flex px-2.5 py-0.5 rounded-full bg-violet-50 border border-violet-100 text-violet-700 text-[10px] font-semibold uppercase tracking-wider"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -202,70 +225,97 @@ export default function LandingPage() {
               </div>
 
               {/* Recency-aware ranking */}
-              <div className="group rounded-2xl border bg-card p-6 md:p-7 hover:shadow-lg transition-all duration-300">
-                <h3 className="text-xl font-semibold mb-3">Recency-aware ranking</h3>
-                <p className="text-muted-foreground leading-relaxed mb-6">
-                  Results blend semantic similarity with acquisition date. Ask for
-                  &quot;latest&quot; or &quot;new&quot; visuals and Brandon prioritizes the most
-                  recent assets.
-                </p>
-                <div className="rounded-xl bg-muted/50 border p-4 space-y-2">
-                  {[
-                    { label: 'EV concept render', date: 'Jan 2026', score: '98%' },
-                    { label: 'Charging hub aerial', date: 'Dec 2025', score: '94%' },
-                    { label: 'Highway autopilot', date: 'Nov 2025', score: '91%' },
-                  ].map((item) => (
-                    <div
-                      key={item.label}
-                      className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border shadow-sm"
-                    >
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-6 rounded bg-gradient-to-br from-amber-50 to-amber-100/50 border" />
-                        <span className="text-xs font-medium">{item.label}</span>
+              <div className="group relative animate-in fade-in slide-in-from-bottom-10 duration-700 delay-300 fill-mode-both">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-400/0 to-teal-400/0 rounded-3xl blur opacity-0 group-hover:from-emerald-400/20 group-hover:to-teal-400/20 group-hover:opacity-100 transition duration-500"></div>
+                <div className="relative rounded-2xl border bg-card/50 backdrop-blur-sm p-6 md:p-8 hover:shadow-xl hover:shadow-emerald-500/5 transition-all duration-500 h-full flex flex-col">
+                  <h3 className="text-xl font-bold mb-3 flex items-center gap-2">
+                    <svg className="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" /></svg>
+                    Recency-aware ranking
+                  </h3>
+                  <p className="text-muted-foreground leading-relaxed mb-8 flex-1">
+                    Results blend semantic similarity with acquisition date. Ask for
+                    &quot;latest&quot; or &quot;new&quot; visuals and Brandon prioritizes the most
+                    recent assets.
+                  </p>
+                  <div className="rounded-xl bg-background/50 border p-5 space-y-3 shadow-inner">
+                    {[
+                      { label: 'EV concept render', date: 'Jan 2026', score: '98%', bg: 'from-emerald-50 to-emerald-100/50', border: 'border-emerald-200' },
+                      { label: 'Charging hub aerial', date: 'Dec 2025', score: '94%', bg: 'from-muted to-muted/50', border: 'border-muted' },
+                      { label: 'Highway autopilot', date: 'Nov 2025', score: '91%', bg: 'from-muted to-muted/50', border: 'border-muted' },
+                    ].map((item, i) => (
+                      <div
+                        key={item.label}
+                        className="flex items-center justify-between bg-white rounded-xl px-4 py-3 border shadow-sm transform transition-transform duration-500 hover:scale-[1.02]"
+                        style={{ transitionDelay: `${i * 75}ms` }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-8 rounded-lg bg-gradient-to-br ${item.bg} border ${item.border}`} />
+                          <span className="text-sm font-semibold">{item.label}</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs text-muted-foreground font-medium">
+                            {item.date}
+                          </span>
+                          <span className={`text-xs font-bold px-2 py-1 rounded-md ${i === 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>
+                            {item.score}
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-muted-foreground">
-                          {item.date}
-                        </span>
-                        <span className="text-[10px] font-medium text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full">
-                          {item.score}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </div>
 
               {/* Role-based access */}
-              <div className="group rounded-2xl border bg-card p-6 md:p-7 hover:shadow-lg transition-all duration-300">
-                <h3 className="text-xl font-semibold mb-3">Role-based access</h3>
-                <p className="text-muted-foreground leading-relaxed mb-6">
-                  Admins ingest and manage assets; everyone else can search and
-                  discover. Perfect for teams with distinct content governance
-                  needs.
-                </p>
-                <div className="rounded-xl bg-muted/50 border p-4 space-y-2">
-                  <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border shadow-sm">
-                    <div className="flex items-center gap-2">
-                      <div className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center">
-                        <span className="text-[9px] font-bold text-blue-600">A</span>
+              <div className="group relative animate-in fade-in slide-in-from-bottom-10 duration-700 delay-400 fill-mode-both">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-orange-400/0 to-red-400/0 rounded-3xl blur opacity-0 group-hover:from-orange-400/20 group-hover:to-red-400/20 group-hover:opacity-100 transition duration-500"></div>
+                <div className="relative rounded-2xl border bg-card/50 backdrop-blur-sm p-6 md:p-8 hover:shadow-xl hover:shadow-orange-500/5 transition-all duration-500 h-full flex flex-col">
+                  <h3 className="text-xl font-bold mb-3 flex items-center gap-2">
+                    <svg className="w-5 h-5 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                    Role-based access
+                  </h3>
+                  <p className="text-muted-foreground leading-relaxed mb-8 flex-1">
+                    Admins ingest and manage assets; everyone else can search and
+                    discover. Perfect for teams with distinct content governance
+                    needs.
+                  </p>
+                  <div className="rounded-xl bg-background/50 border p-5 space-y-3 shadow-inner">
+                    <div className="flex items-center justify-between bg-white rounded-xl px-4 py-3 border shadow-sm transform transition-all duration-500 hover:translate-x-1">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center border border-orange-200">
+                          <span className="text-xs font-bold text-orange-600">A</span>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-bold">Admin</span>
+                          <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Workspace Owner</span>
+                        </div>
                       </div>
-                      <span className="text-xs font-medium">Admin</span>
-                    </div>
-                    <span className="text-[10px] text-muted-foreground">
-                      Upload, manage, search
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border shadow-sm">
-                    <div className="flex items-center gap-2">
-                      <div className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center">
-                        <span className="text-[9px] font-bold text-slate-600">U</span>
+                      <div className="flex gap-1.5">
+                        {['Upload', 'Manage', 'Search'].map(p => (
+                          <span key={p} className="text-[10px] font-medium bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">
+                            {p}
+                          </span>
+                        ))}
                       </div>
-                      <span className="text-xs font-medium">User</span>
                     </div>
-                    <span className="text-[10px] text-muted-foreground">
-                      Search &amp; discover
-                    </span>
+                    <div className="flex items-center justify-between bg-white rounded-xl px-4 py-3 border shadow-sm transform transition-all duration-500 hover:translate-x-1 delay-75">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200">
+                          <span className="text-xs font-bold text-slate-600">U</span>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-bold">User</span>
+                          <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Member</span>
+                        </div>
+                      </div>
+                      <div className="flex gap-1.5">
+                        {['Search', 'View'].map(p => (
+                          <span key={p} className="text-[10px] font-medium bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">
+                            {p}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -274,18 +324,21 @@ export default function LandingPage() {
         </section>
 
         {/* How it works */}
-        <section className="border-t bg-muted/30">
-          <div className="container px-4 py-20 md:py-28">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl mb-4">
+        <section className="relative bg-muted/30 overflow-hidden">
+          <div className="absolute top-0 right-1/4 w-[400px] h-[400px] bg-blue-400/10 blur-[100px] rounded-full pointer-events-none mix-blend-multiply" />
+          <div className="absolute bottom-0 left-1/4 w-[500px] h-[500px] bg-indigo-400/10 blur-[120px] rounded-full pointer-events-none" />
+          
+          <div className="relative container px-4 py-24 md:py-32 border-t border-white/50">
+            <div className="text-center mb-16 md:mb-24 animate-in fade-in slide-in-from-bottom-8 duration-700 fill-mode-both">
+              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-6">
                 How it works
               </h2>
-              <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              <p className="text-muted-foreground text-lg md:text-xl max-w-2xl mx-auto">
                 From upload to discovery in three simple steps.
               </p>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-12 max-w-4xl mx-auto">
+            <div className="grid md:grid-cols-3 gap-12 max-w-5xl mx-auto">
               {[
                 {
                   step: '1',
@@ -308,15 +361,25 @@ export default function LandingPage() {
                   description:
                     'Ask Brandon in natural language. Get ranked results combining relevance and recency — the right asset, every time.',
                 },
-              ].map((item) => (
-                <div key={item.step} className="text-center space-y-4">
-                  <div className="w-14 h-14 rounded-2xl bg-blue-600 text-white flex items-center justify-center mx-auto text-lg font-bold shadow-lg shadow-blue-600/20">
-                    {item.step}
+              ].map((item, index) => (
+                <div 
+                  key={item.step} 
+                  className="group relative text-center space-y-6 animate-in fade-in slide-in-from-bottom-10 duration-700 fill-mode-both"
+                  style={{ animationDelay: `${(index + 1) * 200}ms` }}
+                >
+                  <div className="absolute top-8 left-1/2 -translate-x-1/2 w-20 h-20 bg-blue-400/20 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                  
+                  <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center mx-auto text-xl font-bold shadow-[0_0_30px_-5px_rgba(37,99,235,0.4)] group-hover:shadow-[0_0_40px_-5px_rgba(37,99,235,0.6)] transition-all duration-500 group-hover:-translate-y-2 group-hover:scale-110">
+                    <item.icon className="w-8 h-8 absolute opacity-20 group-hover:opacity-0 transition-opacity duration-300" />
+                    <span className="relative z-10 group-hover:scale-110 transition-transform duration-300">{item.step}</span>
                   </div>
-                  <h3 className="text-lg font-semibold">{item.title}</h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
-                    {item.description}
-                  </p>
+                  
+                  <div className="space-y-4 pt-2 relative">
+                    <h3 className="text-xl font-bold group-hover:text-blue-600 transition-colors duration-300">{item.title}</h3>
+                    <p className="text-muted-foreground leading-relaxed px-4 group-hover:text-foreground/80 transition-colors duration-300">
+                      {item.description}
+                    </p>
+                  </div>
                 </div>
               ))}
             </div>
@@ -324,29 +387,32 @@ export default function LandingPage() {
         </section>
 
         {/* CTA */}
-        <section className="border-t">
-          <div className="relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-indigo-50/30 to-background pointer-events-none" />
-            <div className="relative container px-4 py-20 md:py-28">
-              <div className="mx-auto max-w-3xl text-center space-y-8">
-                <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-                  Ready to find your brand assets faster?
-                </h2>
-                <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-                  Sign up in seconds and start searching your DAM with the
-                  power of AI.
-                </p>
-                <div className="flex flex-wrap items-center justify-center gap-4">
-                  <Button asChild size="lg" className="h-12 px-8 rounded-full bg-blue-600 hover:bg-blue-700 text-base">
-                    <Link href="/signup">
-                      Get started
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Link>
-                  </Button>
-                  <Button asChild variant="outline" size="lg" className="h-12 px-8 rounded-full text-base">
-                    <Link href="/login">Log in</Link>
-                  </Button>
-                </div>
+        <section className="relative border-t overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-indigo-50/30 to-background pointer-events-none" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[500px] bg-blue-500/10 blur-[150px] rounded-full pointer-events-none" />
+          
+          <div className="relative container px-4 py-24 md:py-32">
+            <div className="mx-auto max-w-3xl text-center space-y-8 animate-in fade-in slide-in-from-bottom-10 duration-700 fill-mode-both">
+              <h2 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl text-balance">
+                Ready to find your brand assets{' '}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
+                  faster?
+                </span>
+              </h2>
+              <p className="text-muted-foreground text-lg md:text-xl max-w-xl mx-auto leading-relaxed">
+                Sign up in seconds and start searching your DAM with the
+                power of AI.
+              </p>
+              <div className="flex flex-wrap items-center justify-center gap-4 pt-6">
+                <Button asChild size="lg" className="group h-14 px-8 rounded-full bg-blue-600 hover:bg-blue-700 text-base shadow-[0_0_40px_-10px_rgba(37,99,235,0.4)] hover:shadow-[0_0_60px_-15px_rgba(37,99,235,0.6)] transition-all duration-300 hover:-translate-y-0.5">
+                  <Link href="/signup">
+                    Get started
+                    <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" size="lg" className="h-14 px-8 rounded-full text-base border-blue-200 hover:bg-blue-50/50 hover:text-blue-700 transition-all duration-300 hover:-translate-y-0.5">
+                  <Link href="/login">Log in</Link>
+                </Button>
               </div>
             </div>
           </div>
