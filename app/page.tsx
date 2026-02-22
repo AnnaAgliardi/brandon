@@ -62,30 +62,47 @@ export default function LandingPage() {
                 <div className="p-6 md:p-8 space-y-6 bg-gradient-to-b from-background to-muted/20">
                   <div className="flex justify-end">
                     <div className="bg-slate-100 rounded-2xl px-5 py-3 text-sm max-w-sm">
-                      Show me the latest autonomous driving technology visuals
+                      I&apos;m looking for a picture of a car in the snow.
                     </div>
                   </div>
 
                   <div className="flex items-start gap-3">
                     <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 text-sm font-bold">
-                      B
+                      🤖
                     </div>
                     <div className="space-y-3">
                       <div className="text-sm leading-relaxed max-w-md">
-                        I found 5 recent autonomous driving visuals from your library.
-                        Here are the best matches:
+                        Found 9 assets featuring snow, ranging from winter
+                        landscapes to vehicle details. Here are the best matches:
                       </div>
-                      <div className="flex gap-3">
+                      <div className="grid sm:grid-cols-3 gap-3 max-w-3xl">
                         {[
-                          'from-blue-100 to-blue-50',
-                          'from-slate-200 to-slate-100',
-                          'from-indigo-100 to-indigo-50',
-                        ].map((gradient, i) => (
-                          <div
-                            key={i}
-                            className={`w-28 h-20 rounded-lg bg-gradient-to-br ${gradient} border flex items-center justify-center`}
-                          >
-                            <ImageIcon className="h-5 w-5 text-slate-400" />
+                          {
+                            title: 'Blue Sedan in Snow',
+                            detail: 'Fresh snowfall around parked vehicles',
+                            image: '/landing/blue-sedan-in-snow.png',
+                          },
+                          {
+                            title: 'Cleaning Snow Off Vehicle',
+                            detail: 'A person brushing snow near pickup trucks',
+                            image: '/landing/cleaning-snow-off-vehicle.png',
+                          },
+                          {
+                            title: 'Taillight Snow Detail',
+                            detail: 'Close-up of taillight covered in snow',
+                            image: '/landing/taillight-snow-detail.png',
+                          },
+                        ].map((item) => (
+                          <div key={item.title} className="rounded-xl border bg-white shadow-sm overflow-hidden">
+                            <img
+                              src={item.image}
+                              alt={item.title}
+                              className="h-20 w-full object-cover border-b"
+                            />
+                            <div className="p-2.5 space-y-1">
+                              <p className="text-[11px] font-semibold leading-tight">{item.title}</p>
+                              <p className="text-[10px] text-muted-foreground leading-tight">{item.detail}</p>
+                            </div>
                           </div>
                         ))}
                       </div>
