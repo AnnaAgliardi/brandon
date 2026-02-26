@@ -12,15 +12,12 @@ export default function LandingPage() {
         <section className="relative overflow-hidden">
           {/* Background effects */}
           <div className="hero-background absolute inset-0 bg-gradient-to-br from-blue-50 via-indigo-50/50 to-background pointer-events-none" />
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-blue-400/20 blur-[120px] rounded-full pointer-events-none" />
-          <div className="absolute top-1/3 left-1/4 w-[400px] h-[400px] bg-indigo-400/20 blur-[100px] rounded-full pointer-events-none mix-blend-multiply" />
 
           <div className="relative container px-4 pt-24 pb-24 md:pt-32 md:pb-32 lg:pt-40 lg:pb-40">
             <div className="mx-auto max-w-4xl text-center space-y-8">
               <h1 className="text-5xl font-bold tracking-tight sm:text-6xl md:text-7xl lg:text-[5rem] animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100 fill-mode-both">
                 Find brand assets with{' '}
                 <span className="relative whitespace-nowrap">
-                  <span className="absolute bg-blue-600/20 blur-xl inset-0 rounded-full" />
                   <span className="relative bg-gradient-to-r from-blue-600 via-indigo-500 to-indigo-600 bg-clip-text text-transparent">
                     natural language
                   </span>
@@ -45,8 +42,7 @@ export default function LandingPage() {
 
             {/* Hero Mockup */}
             <div className="mt-16 md:mt-24 mx-auto max-w-4xl relative z-10 animate-in fade-in slide-in-from-bottom-10 duration-700 delay-500 fill-mode-both">
-              <div className="relative group">
-                <div className="absolute -inset-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-3xl blur opacity-20 group-hover:opacity-30 transition duration-1000 group-hover:duration-200"></div>
+              <div className="relative">
                 <div className="relative rounded-2xl border bg-background shadow-2xl overflow-hidden">
                   <div className="flex items-center gap-2 px-4 py-3 border-b bg-muted/30">
                   <div className="flex gap-1.5">
@@ -116,9 +112,6 @@ export default function LandingPage() {
 
         {/* Features */}
         <section id="features" className="bg-background relative overflow-hidden">
-          <div className="absolute top-1/2 right-0 w-[500px] h-[500px] bg-indigo-400/10 blur-[120px] rounded-full pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-[600px] h-[400px] bg-blue-400/10 blur-[100px] rounded-full pointer-events-none" />
-          
           <div className="relative container px-4 py-24 md:py-32">
             <div className="text-center mb-16 md:mb-24 animate-in fade-in slide-in-from-bottom-8 duration-700 fill-mode-both">
               <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-6">
@@ -132,9 +125,8 @@ export default function LandingPage() {
 
             <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
               {/* Natural language search */}
-              <div className="group relative animate-in fade-in slide-in-from-bottom-10 duration-700 delay-100 fill-mode-both">
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-400/0 to-indigo-400/0 rounded-3xl blur opacity-0 group-hover:from-blue-400/20 group-hover:to-indigo-400/20 group-hover:opacity-100 transition duration-500"></div>
-                <div className="relative rounded-2xl border bg-card/50 backdrop-blur-sm p-6 md:p-8 hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-500 h-full flex flex-col">
+              <div className="relative animate-in fade-in slide-in-from-bottom-10 duration-700 delay-100 fill-mode-both">
+                <div className="relative rounded-2xl border bg-card/50 backdrop-blur-sm p-6 md:p-8 h-full flex flex-col">
                   <h3 className="text-xl font-bold mb-3">
                     Natural language search
                   </h3>
@@ -144,12 +136,12 @@ export default function LandingPage() {
                     or keywords required.
                   </p>
                   <div className="rounded-xl bg-background/50 border p-5 space-y-4 shadow-inner">
-                    <div className="flex justify-end transform transition-transform group-hover:-translate-y-1 duration-500">
+                    <div className="flex justify-end">
                       <div className="bg-blue-600 text-white rounded-2xl rounded-tr-sm px-4 py-2 text-sm shadow-md">
                         &quot;Find EV charging visuals&quot;
                       </div>
                     </div>
-                    <div className="flex items-start gap-3 transform transition-transform group-hover:translate-y-1 duration-500 delay-100">
+                    <div className="flex items-start gap-3">
                       <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0 text-sm font-bold shadow-sm">
                         B
                       </div>
@@ -169,9 +161,8 @@ export default function LandingPage() {
               </div>
 
               {/* AI-powered analysis */}
-              <div className="group relative animate-in fade-in slide-in-from-bottom-10 duration-700 delay-200 fill-mode-both">
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-violet-400/0 to-fuchsia-400/0 rounded-3xl blur opacity-0 group-hover:from-violet-400/20 group-hover:to-fuchsia-400/20 group-hover:opacity-100 transition duration-500"></div>
-                <div className="relative rounded-2xl border bg-card/50 backdrop-blur-sm p-6 md:p-8 hover:shadow-xl hover:shadow-violet-500/5 transition-all duration-500 h-full flex flex-col">
+              <div className="relative animate-in fade-in slide-in-from-bottom-10 duration-700 delay-200 fill-mode-both">
+                <div className="relative rounded-2xl border bg-card/50 backdrop-blur-sm p-6 md:p-8 h-full flex flex-col">
                   <h3 className="text-xl font-bold mb-3">
                     AI-powered analysis
                   </h3>
@@ -181,7 +172,7 @@ export default function LandingPage() {
                     asset is findable.
                   </p>
                   <div className="rounded-xl bg-background/50 border p-5 shadow-inner">
-                    <div className="flex items-center gap-4 transform transition-all group-hover:scale-[1.02] duration-500">
+                    <div className="flex items-center gap-4">
                       <div className="space-y-2.5 min-w-0 flex-1">
                         <div className="h-2 w-24 bg-muted rounded-full"></div>
                         <div className="text-sm font-semibold truncate">
@@ -204,9 +195,8 @@ export default function LandingPage() {
               </div>
 
               {/* Recency-aware ranking */}
-              <div className="group relative animate-in fade-in slide-in-from-bottom-10 duration-700 delay-300 fill-mode-both">
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-400/0 to-teal-400/0 rounded-3xl blur opacity-0 group-hover:from-emerald-400/20 group-hover:to-teal-400/20 group-hover:opacity-100 transition duration-500"></div>
-                <div className="relative rounded-2xl border bg-card/50 backdrop-blur-sm p-6 md:p-8 hover:shadow-xl hover:shadow-emerald-500/5 transition-all duration-500 h-full flex flex-col">
+              <div className="relative animate-in fade-in slide-in-from-bottom-10 duration-700 delay-300 fill-mode-both">
+                <div className="relative rounded-2xl border bg-card/50 backdrop-blur-sm p-6 md:p-8 h-full flex flex-col">
                   <h3 className="text-xl font-bold mb-3">
                     Recency-aware ranking
                   </h3>
@@ -223,7 +213,7 @@ export default function LandingPage() {
                     ].map((item, i) => (
                       <div
                         key={item.label}
-                        className="flex items-center justify-between bg-white rounded-xl px-4 py-3 border shadow-sm transform transition-transform duration-500 hover:scale-[1.02]"
+                        className="flex items-center justify-between bg-white rounded-xl px-4 py-3 border shadow-sm"
                         style={{ transitionDelay: `${i * 75}ms` }}
                       >
                         <div className="flex items-center gap-3">
@@ -245,9 +235,8 @@ export default function LandingPage() {
               </div>
 
               {/* Role-based access */}
-              <div className="group relative animate-in fade-in slide-in-from-bottom-10 duration-700 delay-400 fill-mode-both">
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-orange-400/0 to-red-400/0 rounded-3xl blur opacity-0 group-hover:from-orange-400/20 group-hover:to-red-400/20 group-hover:opacity-100 transition duration-500"></div>
-                <div className="relative rounded-2xl border bg-card/50 backdrop-blur-sm p-6 md:p-8 hover:shadow-xl hover:shadow-orange-500/5 transition-all duration-500 h-full flex flex-col">
+              <div className="relative animate-in fade-in slide-in-from-bottom-10 duration-700 delay-400 fill-mode-both">
+                <div className="relative rounded-2xl border bg-card/50 backdrop-blur-sm p-6 md:p-8 h-full flex flex-col">
                   <h3 className="text-xl font-bold mb-3">
                     Role-based access
                   </h3>
@@ -257,7 +246,7 @@ export default function LandingPage() {
                     needs.
                   </p>
                   <div className="rounded-xl bg-background/50 border p-5 space-y-3 shadow-inner">
-                    <div className="flex items-center justify-between bg-white rounded-xl px-4 py-3 border shadow-sm transform transition-all duration-500 hover:translate-x-1">
+                    <div className="flex items-center justify-between bg-white rounded-xl px-4 py-3 border shadow-sm">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center border border-orange-200">
                           <span className="text-xs font-bold text-orange-600">A</span>
@@ -275,7 +264,7 @@ export default function LandingPage() {
                         ))}
                       </div>
                     </div>
-                    <div className="flex items-center justify-between bg-white rounded-xl px-4 py-3 border shadow-sm transform transition-all duration-500 hover:translate-x-1 delay-75">
+                    <div className="flex items-center justify-between bg-white rounded-xl px-4 py-3 border shadow-sm">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200">
                           <span className="text-xs font-bold text-slate-600">U</span>
@@ -303,7 +292,6 @@ export default function LandingPage() {
         {/* CTA */}
         <section className="relative border-t overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-indigo-50/30 to-background pointer-events-none" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[500px] bg-blue-500/10 blur-[150px] rounded-full pointer-events-none" />
           
           <div className="relative container px-4 py-24 md:py-32">
             <div className="mx-auto max-w-3xl text-center space-y-8 animate-in fade-in slide-in-from-bottom-10 duration-700 fill-mode-both">

@@ -71,19 +71,19 @@
 .hero-background {
   position: absolute;
   inset: 0;
-  background-size: 140% 140%;
-  animation: hero-breeze 24s ease-in-out infinite alternate;
+  background-size: 180% 180%;
+  animation: hero-breeze 12s ease-in-out infinite alternate;
 }
 
 @keyframes hero-breeze {
   0% {
-    background-position: 0% 50%;
+    background-position: 0% 45%;
   }
   50% {
-    background-position: 100% 30%;
+    background-position: 100% 20%;
   }
   100% {
-    background-position: 20% 100%;
+    background-position: 10% 100%;
   }
 }
 
