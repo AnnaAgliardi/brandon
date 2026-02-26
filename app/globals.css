@@ -69,23 +69,26 @@
 }
 
 .hero-background {
-  --x: 50%;
-  --y: 50%;
   position: absolute;
   inset: 0;
-  overflow: hidden;
+  background-size: 140% 140%;
+  animation: hero-breeze 24s ease-in-out infinite alternate;
 }
 
-.hero-background::before {
-  content: '';
-  position: absolute;
-  inset: -24px;
-  pointer-events: none;
-  background: radial-gradient(
-    circle 180px at var(--x) var(--y),
-    rgba(37, 99, 235, 0.35) 0%,
-    rgba(37, 99, 235, 0.15) 40%,
-    transparent 100%
-  );
-  filter: blur(18px);
+@keyframes hero-breeze {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 30%;
+  }
+  100% {
+    background-position: 20% 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-background {
+    animation: none;
+  }
 }

@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import { LandingNav } from '@/components/landing-nav'
-import { HeroBackgroundTracker } from '@/components/hero-background-tracker'
 import { Button } from '@/components/ui/button'
 
 export default function LandingPage() {
@@ -10,8 +9,7 @@ export default function LandingPage() {
 
       <main className="flex-1">
         {/* Hero */}
-        <section className="hero-spotlight relative overflow-hidden">
-          <HeroBackgroundTracker />
+        <section className="relative overflow-hidden">
           {/* Background effects */}
           <div className="hero-background absolute inset-0 bg-gradient-to-br from-blue-50 via-indigo-50/50 to-background pointer-events-none" />
           <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-blue-400/20 blur-[120px] rounded-full pointer-events-none" />
