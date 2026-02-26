@@ -67,3 +67,25 @@
     @apply bg-background text-foreground;
   }
 }
+
+.hero-background {
+  --x: 50%;
+  --y: 50%;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.hero-background::before {
+  content: '';
+  position: absolute;
+  inset: -24px;
+  pointer-events: none;
+  background: radial-gradient(
+    circle 180px at var(--x) var(--y),
+    rgba(37, 99, 235, 0.35) 0%,
+    rgba(37, 99, 235, 0.15) 40%,
+    transparent 100%
+  );
+  filter: blur(18px);
+}
