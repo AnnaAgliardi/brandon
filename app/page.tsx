@@ -1,12 +1,6 @@
 import Link from 'next/link'
 import { LandingNav } from '@/components/landing-nav'
 import { Button } from '@/components/ui/button'
-import {
-  ArrowRight,
-  MessageSquare,
-  ImageIcon,
-  Zap,
-} from 'lucide-react'
 
 export default function LandingPage() {
   return (
@@ -41,7 +35,6 @@ export default function LandingPage() {
                 <Button asChild size="lg" className="group h-14 px-8 rounded-full bg-blue-600 hover:bg-blue-700 text-base shadow-[0_0_40px_-10px_rgba(37,99,235,0.4)] hover:shadow-[0_0_60px_-15px_rgba(37,99,235,0.6)] transition-all duration-300 hover:-translate-y-0.5">
                   <Link href="/signup">
                     Get started
-                    <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="lg" className="h-14 px-8 rounded-full text-base border-blue-200 hover:bg-blue-50/50 hover:text-blue-700 transition-all duration-300 hover:-translate-y-0.5">
@@ -76,9 +69,6 @@ export default function LandingPage() {
                   </div>
 
                   <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 text-sm font-bold">
-                      🤖
-                    </div>
                     <div className="space-y-3">
                       <div className="text-sm leading-relaxed max-w-md">
                         Found 9 assets featuring snow, ranging from winter
@@ -145,8 +135,7 @@ export default function LandingPage() {
               <div className="group relative animate-in fade-in slide-in-from-bottom-10 duration-700 delay-100 fill-mode-both">
                 <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-400/0 to-indigo-400/0 rounded-3xl blur opacity-0 group-hover:from-blue-400/20 group-hover:to-indigo-400/20 group-hover:opacity-100 transition duration-500"></div>
                 <div className="relative rounded-2xl border bg-card/50 backdrop-blur-sm p-6 md:p-8 hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-500 h-full flex flex-col">
-                  <h3 className="text-xl font-bold mb-3 flex items-center gap-2">
-                    <MessageSquare className="w-5 h-5 text-blue-500" />
+                  <h3 className="text-xl font-bold mb-3">
                     Natural language search
                   </h3>
                   <p className="text-muted-foreground leading-relaxed mb-8 flex-1">
@@ -183,8 +172,7 @@ export default function LandingPage() {
               <div className="group relative animate-in fade-in slide-in-from-bottom-10 duration-700 delay-200 fill-mode-both">
                 <div className="absolute -inset-0.5 bg-gradient-to-r from-violet-400/0 to-fuchsia-400/0 rounded-3xl blur opacity-0 group-hover:from-violet-400/20 group-hover:to-fuchsia-400/20 group-hover:opacity-100 transition duration-500"></div>
                 <div className="relative rounded-2xl border bg-card/50 backdrop-blur-sm p-6 md:p-8 hover:shadow-xl hover:shadow-violet-500/5 transition-all duration-500 h-full flex flex-col">
-                  <h3 className="text-xl font-bold mb-3 flex items-center gap-2">
-                    <Zap className="w-5 h-5 text-violet-500" />
+                  <h3 className="text-xl font-bold mb-3">
                     AI-powered analysis
                   </h3>
                   <p className="text-muted-foreground leading-relaxed mb-8 flex-1">
@@ -194,9 +182,6 @@ export default function LandingPage() {
                   </p>
                   <div className="rounded-xl bg-background/50 border p-5 shadow-inner">
                     <div className="flex items-center gap-4 transform transition-all group-hover:scale-[1.02] duration-500">
-                      <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-violet-100 to-fuchsia-50 border flex items-center justify-center shrink-0 shadow-inner">
-                        <ImageIcon className="h-6 w-6 text-violet-500" />
-                      </div>
                       <div className="space-y-2.5 min-w-0 flex-1">
                         <div className="h-2 w-24 bg-muted rounded-full"></div>
                         <div className="text-sm font-semibold truncate">
@@ -222,8 +207,7 @@ export default function LandingPage() {
               <div className="group relative animate-in fade-in slide-in-from-bottom-10 duration-700 delay-300 fill-mode-both">
                 <div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-400/0 to-teal-400/0 rounded-3xl blur opacity-0 group-hover:from-emerald-400/20 group-hover:to-teal-400/20 group-hover:opacity-100 transition duration-500"></div>
                 <div className="relative rounded-2xl border bg-card/50 backdrop-blur-sm p-6 md:p-8 hover:shadow-xl hover:shadow-emerald-500/5 transition-all duration-500 h-full flex flex-col">
-                  <h3 className="text-xl font-bold mb-3 flex items-center gap-2">
-                    <svg className="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" /></svg>
+                  <h3 className="text-xl font-bold mb-3">
                     Recency-aware ranking
                   </h3>
                   <p className="text-muted-foreground leading-relaxed mb-8 flex-1">
@@ -264,8 +248,7 @@ export default function LandingPage() {
               <div className="group relative animate-in fade-in slide-in-from-bottom-10 duration-700 delay-400 fill-mode-both">
                 <div className="absolute -inset-0.5 bg-gradient-to-r from-orange-400/0 to-red-400/0 rounded-3xl blur opacity-0 group-hover:from-orange-400/20 group-hover:to-red-400/20 group-hover:opacity-100 transition duration-500"></div>
                 <div className="relative rounded-2xl border bg-card/50 backdrop-blur-sm p-6 md:p-8 hover:shadow-xl hover:shadow-orange-500/5 transition-all duration-500 h-full flex flex-col">
-                  <h3 className="text-xl font-bold mb-3 flex items-center gap-2">
-                    <svg className="w-5 h-5 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                  <h3 className="text-xl font-bold mb-3">
                     Role-based access
                   </h3>
                   <p className="text-muted-foreground leading-relaxed mb-8 flex-1">
@@ -338,7 +321,6 @@ export default function LandingPage() {
                 <Button asChild size="lg" className="group h-14 px-8 rounded-full bg-blue-600 hover:bg-blue-700 text-base shadow-[0_0_40px_-10px_rgba(37,99,235,0.4)] hover:shadow-[0_0_60px_-15px_rgba(37,99,235,0.6)] transition-all duration-300 hover:-translate-y-0.5">
                   <Link href="/signup">
                     Get started
-                    <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="lg" className="h-14 px-8 rounded-full text-base border-blue-200 hover:bg-blue-50/50 hover:text-blue-700 transition-all duration-300 hover:-translate-y-0.5">
