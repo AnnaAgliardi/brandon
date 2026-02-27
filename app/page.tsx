@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen flex flex-col bg-blue-600">
+    <div className="min-h-screen flex flex-col bg-background">
       <LandingNav />
 
       <main className="flex-1">
@@ -111,13 +111,13 @@ export default function LandingPage() {
         </section>
 
         {/* Features */}
-        <section id="features" className="bg-blue-600 relative overflow-hidden">
+        <section id="features" className="bg-background relative overflow-hidden">
           <div className="relative container px-4 py-24 md:py-32">
             <div className="text-center mb-16 md:mb-24 animate-in fade-in slide-in-from-bottom-8 duration-700 fill-mode-both">
               <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-6">
                 Everything you need to manage brand assets
               </h2>
-              <p className="text-blue-100 text-lg md:text-xl max-w-2xl mx-auto">
+              <p className="text-muted-foreground text-lg md:text-xl max-w-2xl mx-auto">
                 From AI-powered search to smart ranking, Brandon understands
                 your content and your team&apos;s needs.
               </p>
@@ -290,7 +290,7 @@ export default function LandingPage() {
         </section>
 
         {/* CTA */}
-        <section className="relative border-t border-blue-400 overflow-hidden">
+        <section className="relative border-t overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-indigo-50/30 to-background pointer-events-none" />
           
           <div className="relative container px-4 py-24 md:py-32">
@@ -301,7 +301,7 @@ export default function LandingPage() {
                   faster?
                 </span>
               </h2>
-              <p className="text-blue-100 text-lg md:text-xl max-w-xl mx-auto leading-relaxed">
+              <p className="text-muted-foreground text-lg md:text-xl max-w-xl mx-auto leading-relaxed">
                 Sign up in seconds and start searching your DAM with the
                 power of AI.
               </p>
@@ -320,29 +320,29 @@ export default function LandingPage() {
         </section>
 
         {/* Footer */}
-        <footer className="border-t border-white/10 bg-black py-10">
-          <div className="container px-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-white/70">
+        <footer className="border-t bg-muted/20 py-10">
+          <div className="container px-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-white">Brandon</span>
+              <span className="font-semibold text-foreground">Brandon</span>
               <span>&middot;</span>
               <span>Brand Asset Assistant</span>
             </div>
             <div className="flex items-center gap-6">
               <Link
                 href="/#features"
-                className="hover:text-white transition-colors"
+                className="hover:text-foreground transition-colors"
               >
                 Features
               </Link>
               <Link
                 href="/login"
-                className="hover:text-white transition-colors"
+                className="hover:text-foreground transition-colors"
               >
                 Log in
               </Link>
               <Link
                 href="/signup"
-                className="hover:text-white transition-colors"
+                className="hover:text-foreground transition-colors"
               >
                 Sign up
               </Link>
