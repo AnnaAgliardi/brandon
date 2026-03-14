@@ -60,32 +60,32 @@ export default function LandingPage() {
                 <div className="p-6 md:p-8 space-y-6 bg-gradient-to-b from-background to-muted/20">
                   <div className="flex justify-end">
                     <div className="bg-slate-100 rounded-2xl px-5 py-3 text-sm max-w-sm">
-                      I&apos;m looking for a picture of a car in the snow.
+                      Could you help me find a picture of a modern sports car?
                     </div>
                   </div>
 
                   <div className="flex items-start gap-3">
                     <div className="space-y-3">
                       <div className="text-sm leading-relaxed max-w-md">
-                        Found 9 assets featuring snow, ranging from winter
-                        landscapes to vehicle details. Here are the best matches:
+                        Found 12 assets featuring modern sports cars, from
+                        track-ready supercars to open-road shots. Here are the best matches:
                       </div>
                       <div className="grid sm:grid-cols-3 gap-3 max-w-3xl">
                         {[
                           {
-                            title: 'Blue Sedan in Snow',
-                            detail: 'Fresh snowfall around parked vehicles',
-                            image: '/landing/blue-sedan-in-snow.png',
+                            title: 'Yellow Ferrari F8',
+                            detail: 'Sports car under dramatic garage lighting',
+                            image: '/landing/yellow-ferrari-garage.png',
                           },
                           {
-                            title: 'Cleaning Snow Off Vehicle',
-                            detail: 'A person brushing snow near pickup trucks',
-                            image: '/landing/cleaning-snow-off-vehicle.png',
+                            title: 'White Corvette Stingray',
+                            detail: 'Cruising on open highway with mountain backdrop',
+                            image: '/landing/white-corvette-highway.png',
                           },
                           {
-                            title: 'Taillight Snow Detail',
-                            detail: 'Close-up of taillight covered in snow',
-                            image: '/landing/taillight-snow-detail.png',
+                            title: 'Red Ferrari 488',
+                            detail: 'Overhead shot on open parking deck',
+                            image: '/landing/red-ferrari-parking.png',
                           },
                         ].map((item) => (
                           <div key={item.title} className="rounded-xl border bg-white shadow-sm overflow-hidden">
