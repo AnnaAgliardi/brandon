@@ -70,37 +70,46 @@ export default function LandingPage() {
                         Found 12 assets featuring modern sports cars, from
                         track-ready supercars to open-road shots. Here are the best matches:
                       </div>
-                      <div className="grid sm:grid-cols-3 gap-3 max-w-3xl">
-                        {[
-                          {
-                            title: 'Yellow Ferrari F8',
-                            detail: 'Sports car under dramatic garage lighting',
-                            image: '/landing/yellow-ferrari-garage.png',
-                          },
-                          {
-                            title: 'White Corvette Stingray',
-                            detail: 'Cruising on open highway with mountain backdrop',
-                            image: '/landing/white-corvette-highway.png',
-                          },
-                          {
-                            title: 'Red Ferrari 488',
-                            detail: 'Overhead shot on open parking deck',
-                            image: '/landing/red-ferrari-parking.png',
-                          },
-                        ].map((item) => (
-                          <div key={item.title} className="rounded-xl border bg-white shadow-sm overflow-hidden">
-                            <img
-                              src={item.image}
-                              alt={item.title}
-                              className="h-20 w-full object-cover border-b"
-                            />
-                            <div className="p-2.5 space-y-1">
-                              <p className="text-[11px] font-semibold leading-tight">{item.title}</p>
-                              <p className="text-[10px] text-muted-foreground leading-tight">{item.detail}</p>
+                      <div className="flex items-start gap-2 max-w-3xl">
+                        <div className="grid sm:grid-cols-3 gap-3 flex-1">
+                          {[
+                            {
+                              title: 'Red Ferrari 488',
+                              detail: 'Overhead shot on open parking deck',
+                              image: '/landing/red-ferrari-parking.png',
+                              position: 'object-center',
+                            },
+                            {
+                              title: 'White Corvette Stingray',
+                              detail: 'Cruising on open highway with mountain backdrop',
+                              image: '/landing/white-corvette-highway.png',
+                              position: 'object-center',
+                            },
+                            {
+                              title: 'Yellow Ferrari F8',
+                              detail: 'Sports car under dramatic garage lighting',
+                              image: '/landing/yellow-ferrari-garage.png',
+                              position: 'object-center',
+                            },
+                          ].map((item) => (
+                            <div key={item.title} className="rounded-xl border bg-white shadow-sm overflow-hidden">
+                              <img
+                                src={item.image}
+                                alt={item.title}
+                                className={`h-20 w-full object-cover border-b ${item.position}`}
+                              />
+                              <div className="p-2.5 space-y-1">
+                                <p className="text-[11px] font-semibold leading-tight">{item.title}</p>
+                                <p className="text-[10px] text-muted-foreground leading-tight">{item.detail}</p>
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
+                        <div className="flex flex-col items-center justify-center self-stretch pl-1 text-muted-foreground">
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+                        </div>
                       </div>
+                      <p className="text-[10px] text-muted-foreground pt-1">Showing 3 of 12 results</p>
                     </div>
                   </div>
                 </div>
