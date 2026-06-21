@@ -63,7 +63,7 @@ Brandon targets **automotive and technology brands** with focus on:
 - **Auth & Database**: Supabase (PostgreSQL + Auth)
 - **File Storage**: Supabase Storage (two buckets: `assets-full`, `assets-preview`)
 - **Vector Database**: Pinecone (cosine similarity, 3072 dimensions)
-- **LLM Provider**: Google Gemini 3 Pro Preview (`gemini-3-pro-preview`)
+- **LLM Provider**: Google Gemini — free-tier Flash models by default (chat: `gemini-flash-latest`, vision: `gemini-2.5-flash`). ⚠️ The project's Gemini key is on the **free tier**, where Gemini 3 Pro (`gemini-3-pro-preview`) has a quota of **0** and returns 429 on every call. Override the models via `GEMINI_CHAT_MODEL` / `GEMINI_VISION_MODEL` only after upgrading the key to a paid plan.
 - **Embeddings**: OpenAI `text-embedding-3-large` (3072 dimensions)
 - **Image Processing**: Sharp (preview generation)
 
@@ -680,13 +680,17 @@ const user = await requireAdmin(supabase) // Throws if not admin
 
 ### Gemini Integration
 
-**Model**: `gemini-3-pro-preview`
+**Models** (defined in `lib/gemini.ts`, both overridable via env):
+- **Chat** (asset selection): `gemini-flash-latest` — override with `GEMINI_CHAT_MODEL`
+- **Vision** (asset analysis): `gemini-2.5-flash` — override with `GEMINI_VISION_MODEL`
 
-**Best Practices** (per Google's Gemini 3 recommendations):
+⚠️ **Do not use `gemini-3-pro-preview`** unless the Gemini key is on a paid plan — it has a free-tier quota of 0 and 429s on every call (this silently broke chat search in production). See the "Gemini API Errors" troubleshooting entry.
+
+**Best Practices**:
 
 1. **PTCF Framework**: All prompts use Persona-Task-Context-Format structure with XML tags
 2. **Structured JSON Output**: Use `responseSchema` parameter for guaranteed valid JSON
-3. **Temperature**: Use default (1.0) for optimal instruction following
+3. **Temperature**: Chat selection runs at a low temperature (`0.3`, via `GEMINI_CHAT_TEMPERATURE`) for consistent structured output; the vision schema uses the model default
 4. **System Instructions**: Define persona/rules via `systemInstruction` parameter
 5. **Image Ordering**: Place images before text in multimodal calls
 
@@ -1070,27 +1074,28 @@ await pineconeIndex.deleteAll()
 
 ### Gemini API Errors
 
-**Symptom**: 400/403 errors from Gemini
+**Symptom**: Chat search fails at the "Generating response..." step; logs show `Error generating chat response with Gemini`. Or 400/403 errors.
 
 **Causes**:
-1. Invalid API key
-2. Quota exceeded
-3. Model name incorrect
+1. **Free-tier model quota (most common here)**: `gemini-3-pro-preview` has a free-tier quota of **0** → every call returns **429 RESOURCE_EXHAUSTED**. The generic re-thrown error hides this; call the model directly with the key to see the real 429.
+2. Invalid API key
+3. Model name incorrect / not available to the key
 4. Response schema too strict
 
 **Fix**:
+```bash
+# List models the key can actually use (and spot which are paid-only)
+curl -s "https://generativelanguage.googleapis.com/v1beta/models?key=$GEMINI_API_KEY" \
+  | grep -oE '"name": "models/[^"]+"'
+
+# Reproduce the exact call to see the real (unmasked) error, e.g. 429
+curl -s "https://generativelanguage.googleapis.com/v1beta/models/<model>:generateContent?key=$GEMINI_API_KEY" \
+  -H 'Content-Type: application/json' -d '{"contents":[{"parts":[{"text":"hi"}]}]}'
+```
 ```typescript
-// Verify model name
-const model = genAI.getGenerativeModel({ model: 'gemini-3-pro-preview' })
-
-// Check API key is valid
-// Visit https://ai.google.dev/
-
-// Temporarily disable responseSchema to see raw response
-// generationConfig: {
-//   responseMimeType: 'application/json',
-//   // responseSchema: schema // Comment out for debugging
-// }
+// Stay on free-tier models unless the key is upgraded:
+//   chat   → gemini-flash-latest   (GEMINI_CHAT_MODEL)
+//   vision → gemini-2.5-flash      (GEMINI_VISION_MODEL)
 ```
 
 ---
