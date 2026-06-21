@@ -39,6 +39,10 @@ export async function POST(request: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
+    // Start the embedding now; it only needs llm_description and can run while
+    // the database insert is in flight.
+    const embeddingPromise = generateEmbedding(validatedData.llm_description)
+
     // Insert asset into database
     const { data: asset, error: insertError } = await supabaseAdmin
       .from('assets')
@@ -79,8 +83,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Generate embedding
-    const embedding = await generateEmbedding(validatedData.llm_description)
+    // Await the embedding (started above, overlapped with the insert)
+    const embedding = await embeddingPromise
 
     // Prepare metadata for Pinecone
     const pineconeMetadata: PineconeMetadata = {

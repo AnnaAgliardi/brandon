@@ -61,40 +61,48 @@ export async function POST(request: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
-    const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
+    // The full-image upload and the Gemini Vision analysis only need the buffer,
+    // so start them now and let them run while Sharp generates the preview.
+    const previewFileName = `${uuidv4()}_preview.jpg`
+
+    const fullUploadPromise = supabaseAdmin.storage
       .from('assets-full')
       .upload(fileName, imageBuffer, {
         contentType: imageFile.type,
         upsert: false,
       })
+    const geminiPromise = analyzeImage(imageBuffer, imageFile.type)
 
-    if (uploadError) {
-      console.error('Error uploading full image:', uploadError)
-      return NextResponse.json(
-        { error: 'Failed to upload image' },
-        { status: 500 }
-      )
-    }
-
-    // Generate preview image
+    // Generate preview locally, then start its upload
     const previewBuffer = await generatePreview(imageBuffer, {
       maxWidth: 800,
       quality: 80,
       format: 'jpeg',
     })
+    const previewUploadPromise = supabaseAdmin.storage
+      .from('assets-preview')
+      .upload(previewFileName, previewBuffer, {
+        contentType: 'image/jpeg',
+        upsert: false,
+      })
 
-    const previewFileName = `${uuidv4()}_preview.jpg`
+    const [uploadResult, previewResult, geminiResponse] = await Promise.all([
+      fullUploadPromise,
+      previewUploadPromise,
+      geminiPromise,
+    ])
 
-    const { data: previewUploadData, error: previewError } =
-      await supabaseAdmin.storage
-        .from('assets-preview')
-        .upload(previewFileName, previewBuffer, {
-          contentType: 'image/jpeg',
-          upsert: false,
-        })
+    if (uploadResult.error) {
+      console.error('Error uploading full image:', uploadResult.error)
+      // Best-effort cleanup of the preview if it made it up
+      if (!previewResult.error) {
+        await supabaseAdmin.storage.from('assets-preview').remove([previewFileName])
+      }
+      return NextResponse.json({ error: 'Failed to upload image' }, { status: 500 })
+    }
 
-    if (previewError) {
-      console.error('Error uploading preview image:', previewError)
+    if (previewResult.error) {
+      console.error('Error uploading preview image:', previewResult.error)
       // Clean up full image
       await supabaseAdmin.storage.from('assets-full').remove([fileName])
       return NextResponse.json(
@@ -102,9 +110,6 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       )
     }
-
-    // Generate description with Gemini Vision
-    const geminiResponse = await analyzeImage(imageBuffer, imageFile.type)
 
     // Build LLM description
     const llmDescription = `${geminiResponse.summary}. This image features ${geminiResponse.subjects.join(', ')} with a ${geminiResponse.mood.join(', ')} mood. The setting is ${geminiResponse.setting.environment} during ${geminiResponse.setting.time_of_day}. Composition: ${geminiResponse.composition.orientation} orientation, ${geminiResponse.composition.shot_type} shot. Suitable for ${geminiResponse.usage.typical_channels.join(', ')}.`

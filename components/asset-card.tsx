@@ -52,6 +52,8 @@ export function AssetCard({ asset, onPreview }: AssetCardProps) {
           <img
             src={previewUrl}
             alt={asset.label}
+            loading="lazy"
+            decoding="async"
             className="w-full h-full object-cover"
             onError={(e) => {
               ; (e.target as HTMLImageElement).src = '/placeholder.png'

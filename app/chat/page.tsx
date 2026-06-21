@@ -403,49 +403,53 @@ export default function ChatPage() {
         }
 
         const decoder = new TextDecoder()
-        let assistantMessageContent = ''
-        let assistantAssets: BrandonAsset[] = []
+        let buffer = ''
 
         while (true) {
           const { done, value } = await reader.read()
           if (done) break
 
-          const chunk = decoder.decode(value)
-          const lines = chunk.split('\n\n')
+          // Accumulate bytes and only consume complete SSE events (separated by
+          // a blank line); keep any trailing partial for the next read so events
+          // split across chunks aren't dropped.
+          buffer += decoder.decode(value, { stream: true })
+          const events = buffer.split('\n\n')
+          buffer = events.pop() ?? ''
 
-          for (const line of lines) {
-            if (!line.trim() || !line.startsWith('data: ')) continue
+          for (const evt of events) {
+            const line = evt.trim()
+            if (!line.startsWith('data: ')) continue
 
+            let data: any
             try {
-              const data = JSON.parse(line.slice(6))
-
-              if (data.type === 'status') {
-                setStatusMessage(data.data.status)
-              } else if (data.type === 'session') {
-                setCurrentSessionId(data.data.session_id)
-              } else if (data.type === 'result') {
-                assistantMessageContent = data.data.assistant_message
-                assistantAssets = data.data.assets || []
-              } else if (data.type === 'error') {
-                throw new Error(data.data.error)
-              }
+              data = JSON.parse(line.slice(6))
             } catch (parseError) {
               console.error('Error parsing SSE data:', parseError)
+              continue
+            }
+
+            if (data.type === 'error') {
+              throw new Error(data.data.error)
+            } else if (data.type === 'status') {
+              setStatusMessage(data.data.status)
+            } else if (data.type === 'session') {
+              setCurrentSessionId(data.data.session_id)
+            } else if (data.type === 'result') {
+              // Render as soon as the result arrives — don't wait for the stream
+              // to close (the server persists messages afterward).
+              const assistantMessageObj: ChatMessage = {
+                id: crypto.randomUUID(),
+                user_id: session.user.id,
+                role: 'assistant',
+                content: data.data.assistant_message,
+                assets: data.data.assets || [],
+                created_at: new Date().toISOString(),
+              }
+              setMessages((prev) => [...prev, assistantMessageObj])
+              setIsThinking(false)
+              setStatusMessage('')
             }
           }
-        }
-
-        // Add assistant message to UI after stream completes
-        if (assistantMessageContent) {
-          const assistantMessageObj: ChatMessage = {
-            id: crypto.randomUUID(),
-            user_id: session.user.id,
-            role: 'assistant',
-            content: assistantMessageContent,
-            assets: assistantAssets,
-            created_at: new Date().toISOString(),
-          }
-          setMessages((prev) => [...prev, assistantMessageObj])
         }
       }
     } catch (error: any) {
@@ -574,6 +578,8 @@ export default function ChatPage() {
                                   : '')
                               }
                               alt="User upload"
+                              loading="lazy"
+                              decoding="async"
                               className="w-full h-full object-cover"
                               onError={(e) => {
                                 ; (e.target as HTMLImageElement).style.display = 'none'

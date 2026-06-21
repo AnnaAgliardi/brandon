@@ -4,6 +4,7 @@ import { requireAuth } from '@/lib/auth-helpers'
 import { generateEmbedding } from '@/lib/openai'
 import { queryVectors } from '@/lib/pinecone'
 import { generateChatResponse } from '@/lib/gemini'
+import { rerankCandidates } from '@/lib/rerank'
 import { ChatRequestSchema, BrandonAsset } from '@/lib/types'
 import { checkRateLimit, isRateLimited, getRateLimitHeaders } from '@/lib/rate-limit'
 
@@ -116,8 +117,18 @@ async function processRequest(
     let currentSessionId = session_id
     let isNewSession = false
 
+    // Build a retrieval query from the last couple of user turns so follow-ups
+    // ("show me more like that", "the red one") keep context. The embedding is
+    // started immediately so the OpenAI round-trip overlaps the session writes.
+    const recentUserTurns = (messages as any[])
+      .filter((m) => m?.role === 'user' && typeof m.content === 'string' && m.content.trim())
+      .slice(-2)
+      .map((m) => m.content.trim())
+    const retrievalQuery = recentUserTurns.join('\n') || userMessageContent
+    const embeddingPromise = generateEmbedding(retrievalQuery)
+
     if (!currentSessionId) {
-      // Create new session if none provided
+      // Create new session if none provided (awaited: we need the id to link messages)
       const { data: newSession, error: sessionError } = await supabase
         .from('chat_sessions')
         .insert({
@@ -131,8 +142,8 @@ async function processRequest(
       currentSessionId = newSession.id
       isNewSession = true
     } else {
-      // Update existing session timestamp
-      await supabase
+      // Bump the session timestamp without blocking the search path
+      void supabase
         .from('chat_sessions')
         .update({ updated_at: new Date().toISOString() })
         .eq('id', currentSessionId)
@@ -141,42 +152,25 @@ async function processRequest(
     // Send session ID to client immediately
     send({ type: 'session', data: { session_id: currentSessionId } })
 
-    // Save User Message
-    const { error: msgError } = await supabase.from('chat_messages').insert({
+    // Persist the user message in the background; it isn't needed by the search
+    // path, so we await it only at the end (alongside the assistant message).
+    const userMessageInsert = supabase.from('chat_messages').insert({
       user_id: user.id,
       session_id: currentSessionId, // Link to session
       role: 'user',
       content: userMessageContent,
     })
 
-    if (msgError) throw msgError
-
     // Send status: Analyzing query
     send({ type: 'status', data: { status: 'Analyzing your query...' } })
 
-    // Generate embedding for query
-    const queryEmbedding = await generateEmbedding(userMessageContent)
-
-    // Get total asset count
-    const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
-
-    const { count: totalAssets } = await supabaseAdmin
-      .from('assets')
-      .select('*', { count: 'exact', head: true })
-      .eq('status', 'approved')
+    // Await the embedding (started above, overlapped with the DB writes)
+    const queryEmbedding = await embeddingPromise
 
     // Send status: Searching
-    send({
-      type: 'status',
-      data: {
-        status: `Searching through ${totalAssets?.toLocaleString() || 0} assets...`,
-      },
-    })
+    send({ type: 'status', data: { status: 'Searching the asset library...' } })
 
-    // Generate Embedding & Search
+    // Vector search
     const pineconeResults = await queryVectors(queryEmbedding, 30, { status: 'approved' })
 
     // Send status: Found matches
@@ -191,30 +185,11 @@ async function processRequest(
       data: { status: 'Ranking by relevance and recency...' },
     })
 
-    // Re-rank by recency
-    const THREE_YEARS_MS = 3 * 365 * 24 * 60 * 60 * 1000
-    const now = Date.now()
-    const ALPHA = 0.7
+    // Rerank candidates (internal reranker today; Cognee is a future drop-in).
+    const ranked = await rerankCandidates(userMessageContent, pineconeResults as any[])
 
-    const candidates = pineconeResults.map((result: any) => {
-      const purchaseDateMs = result.metadata.image_purchase_date || now
-      const age = now - purchaseDateMs
-      const recencyScore = Math.max(0, 1 - age / THREE_YEARS_MS)
-      const combinedScore = ALPHA * result.score + (1 - ALPHA) * recencyScore
-
-      return {
-        ...result.metadata,
-        similarity: result.score,
-        recencyScore,
-        combinedScore,
-      }
-    })
-
-    // Sort by combined score
-    candidates.sort((a, b) => b.combinedScore - a.combinedScore)
-
-    // Take top 7 for faster response generation
-    const topCandidates = candidates.slice(0, 7)
+    // Take the top candidates for response generation
+    const topCandidates = ranked.slice(0, 10)
 
     // Send status: Generating response
     send({ type: 'status', data: { status: 'Generating response...' } })
@@ -244,16 +219,7 @@ async function processRequest(
       return asset
     })
 
-    // Save Assistant Message
-    await supabase.from('chat_messages').insert({
-      user_id: user.id,
-      session_id: currentSessionId, // Link to session
-      role: 'assistant',
-      content: geminiResponse.assistant_message,
-      assets: enrichedAssets,
-    })
-
-    // Stream Response
+    // Send the result FIRST so the user sees the answer immediately, then persist.
     send({
       type: 'result',
       data: {
@@ -261,6 +227,21 @@ async function processRequest(
         assets: enrichedAssets,
       },
     })
+
+    // Persist both messages after responding (off the perceived-latency path).
+    const [userResult, assistantResult] = await Promise.all([
+      userMessageInsert,
+      supabase.from('chat_messages').insert({
+        user_id: user.id,
+        session_id: currentSessionId, // Link to session
+        role: 'assistant',
+        content: geminiResponse.assistant_message,
+        assets: enrichedAssets,
+      }),
+    ])
+
+    if (userResult.error) console.error('Failed to save user message:', userResult.error)
+    if (assistantResult.error) console.error('Failed to save assistant message:', assistantResult.error)
 
     close()
   } catch (error: any) {

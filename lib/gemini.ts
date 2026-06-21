@@ -48,9 +48,13 @@ export const visionModel = genAI.getGenerativeModel({
   },
 })
 
-// Chat model for conversational responses - using Gemini 3 Pro Preview
+// Chat model for conversational responses.
+// The asset-selection task (pick from ~10 candidates + write 1-3 sentences) does
+// not need a reasoning model, so we default to a fast Flash model. Override with
+// GEMINI_CHAT_MODEL if your account exposes a different id (e.g. gemini-2.5-flash).
+const CHAT_MODEL = process.env.GEMINI_CHAT_MODEL || 'gemini-flash-latest'
 export const chatModel = genAI.getGenerativeModel({
-  model: 'gemini-3-pro-preview',
+  model: CHAT_MODEL,
   systemInstruction: `You are Brandon, an AI assistant helping users find brand assets quickly and efficiently.
 
 PERSONALITY:
@@ -87,6 +91,8 @@ SELECTION RULES:
 3. For "latest"/"new"/"recent" queries, prioritize recent image_purchase_date
 4. Provide brief explanations for why each asset matches`,
   generationConfig: {
+    // Low temperature for consistent, accurate selection on a structured task.
+    temperature: Number(process.env.GEMINI_CHAT_TEMPERATURE ?? 0.3),
     responseMimeType: 'application/json',
     responseSchema: {
       type: SchemaType.OBJECT,
@@ -212,8 +218,7 @@ ${JSON.stringify(essentialCandidates)}
 </instructions>`
 
   try {
-    // System instruction is defined in model configuration
-    // Using default temperature (1.0) as recommended for Gemini 3
+    // System instruction, model, and temperature are defined in model configuration
     const result = await chatModel.generateContent([{ text: prompt }])
 
     const responseText = result.response.text()
