@@ -4,9 +4,13 @@ import { GeminiVisionResponseSchema, GeminiChatResponseSchema } from './types'
 // Use a placeholder key during build, validate at runtime
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'placeholder-for-build')
 
-// Vision model for image analysis - using Gemini 3 Pro Preview
+// Vision model for image analysis. Defaults to a free-tier multimodal Flash
+// model so image analysis works without a paid Gemini plan (Gemini 3 Pro is not
+// available on the free tier — its free-tier quota is 0, which returns 429).
+// Override with GEMINI_VISION_MODEL if your account exposes a different id.
+const VISION_MODEL = process.env.GEMINI_VISION_MODEL || 'gemini-2.5-flash'
 export const visionModel = genAI.getGenerativeModel({
-  model: 'gemini-3-pro-preview',
+  model: VISION_MODEL,
   generationConfig: {
     responseMimeType: 'application/json',
     responseSchema: {
