@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai'
 import { GeminiVisionResponseSchema, GeminiChatResponseSchema } from './types'
+import { withRetry, isRetryableGeminiError } from './retry'
 
 // Use a placeholder key during build, validate at runtime
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'placeholder-for-build')
@@ -162,16 +163,19 @@ Provide a JSON response with the structure defined in the response schema.
 </format>`
 
   try {
-    // Image is placed before text prompt per Gemini best practices
-    const result = await visionModel.generateContent([
-      {
-        inlineData: {
-          mimeType: mimeType,
-          data: imageBuffer.toString('base64'),
+    // Image is placed before text prompt per Gemini best practices.
+    // Retried with backoff so a transient free-tier 503 doesn't fail the upload.
+    const result = await withRetry('vision', () =>
+      visionModel.generateContent([
+        {
+          inlineData: {
+            mimeType: mimeType,
+            data: imageBuffer.toString('base64'),
+          },
         },
-      },
-      { text: prompt },
-    ])
+        { text: prompt },
+      ])
+    )
 
     const responseText = result.response.text()
 
@@ -180,6 +184,9 @@ Provide a JSON response with the structure defined in the response schema.
     return GeminiVisionResponseSchema.parse(parsed)
   } catch (error) {
     console.error('Error analyzing image with Gemini:', error)
+    if (isRetryableGeminiError(error)) {
+      throw new Error('Image analysis is temporarily unavailable (high demand). Please try again in a moment.')
+    }
     throw new Error('Failed to analyze image')
   }
 }
@@ -222,8 +229,11 @@ ${JSON.stringify(essentialCandidates)}
 </instructions>`
 
   try {
-    // System instruction, model, and temperature are defined in model configuration
-    const result = await chatModel.generateContent([{ text: prompt }])
+    // System instruction, model, and temperature are defined in model configuration.
+    // Retried with backoff so a transient free-tier 503 doesn't fail the whole chat.
+    const result = await withRetry('chat', () =>
+      chatModel.generateContent([{ text: prompt }])
+    )
 
     const responseText = result.response.text()
 
@@ -232,6 +242,9 @@ ${JSON.stringify(essentialCandidates)}
     return GeminiChatResponseSchema.parse(parsed)
   } catch (error) {
     console.error('Error generating chat response with Gemini:', error)
+    if (isRetryableGeminiError(error)) {
+      throw new Error('Brandon is experiencing high demand right now. Please try again in a moment.')
+    }
     throw new Error('Failed to generate chat response')
   }
 }
