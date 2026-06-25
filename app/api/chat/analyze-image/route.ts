@@ -62,9 +62,17 @@ export async function POST(request: NextRequest) {
         const buffer = Buffer.from(arrayBuffer)
         const mimeType = image.type
 
-        // Upload image to Supabase Storage
+        // Upload the user's query image with a service-role client. The
+        // assets-preview bucket's INSERT policy is admin-only, so uploading with
+        // the user's session client (anon key) fails for non-admin chat users
+        // with "new row violates row-level security policy". This mirrors the
+        // admin ingestion route, which also uploads to storage via service role.
         const fileName = `${user.id}/${Date.now()}-${image.name}`
-        const { error: uploadError } = await supabase.storage
+        const supabaseAdmin = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!
+        )
+        const { error: uploadError } = await supabaseAdmin.storage
             .from('assets-preview')
             .upload(fileName, buffer, {
                 contentType: mimeType,
@@ -75,7 +83,9 @@ export async function POST(request: NextRequest) {
             console.error('Error uploading image:', uploadError)
         }
 
-        const imagePath = fileName
+        // Only persist the path when the upload succeeded, so chat history never
+        // references a non-existent object.
+        const imagePath = uploadError ? null : fileName
 
         // 4. Analyze with Gemini Vision
         console.log('Analyzing image with Gemini Vision...')
