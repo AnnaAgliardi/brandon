@@ -5,11 +5,11 @@ import { withRetry, isRetryableGeminiError } from './retry'
 // Use a placeholder key during build, validate at runtime
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'placeholder-for-build')
 
-// Vision model for image analysis. Defaults to a free-tier multimodal Flash
-// model so image analysis works without a paid Gemini plan (Gemini 3 Pro is not
-// available on the free tier — its free-tier quota is 0, which returns 429).
-// Override with GEMINI_VISION_MODEL if your account exposes a different id.
-const VISION_MODEL = process.env.GEMINI_VISION_MODEL || 'gemini-2.5-flash'
+// Vision model for image analysis. Defaults to Gemini 3.5 Flash (GA, multimodal).
+// Requires a key with quota for 3.x models — a free-tier key may have quota 0,
+// which returns 429. Override with GEMINI_VISION_MODEL (e.g. gemini-2.5-flash on
+// a free-tier key) if your account doesn't expose 3.5 Flash.
+const VISION_MODEL = process.env.GEMINI_VISION_MODEL || 'gemini-3.5-flash'
 export const visionModel = genAI.getGenerativeModel({
   model: VISION_MODEL,
   generationConfig: {
@@ -55,9 +55,10 @@ export const visionModel = genAI.getGenerativeModel({
 
 // Chat model for conversational responses.
 // The asset-selection task (pick from ~10 candidates + write 1-3 sentences) does
-// not need a reasoning model, so we default to a fast Flash model. Override with
-// GEMINI_CHAT_MODEL if your account exposes a different id (e.g. gemini-2.5-flash).
-const CHAT_MODEL = process.env.GEMINI_CHAT_MODEL || 'gemini-flash-latest'
+// not need a reasoning model, so we default to a fast Flash model: Gemini 3.5
+// Flash. Requires quota for 3.x models (a free-tier key may have quota 0 → 429).
+// Override with GEMINI_CHAT_MODEL (e.g. gemini-flash-latest) on a free-tier key.
+const CHAT_MODEL = process.env.GEMINI_CHAT_MODEL || 'gemini-3.5-flash'
 export const chatModel = genAI.getGenerativeModel({
   model: CHAT_MODEL,
   systemInstruction: `You are Brandon, an AI assistant helping users find brand assets quickly and efficiently.

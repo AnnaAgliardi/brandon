@@ -63,7 +63,7 @@ Brandon targets **automotive and technology brands** with focus on:
 - **Auth & Database**: Supabase (PostgreSQL + Auth)
 - **File Storage**: Supabase Storage (two buckets: `assets-full`, `assets-preview`)
 - **Vector Database**: Pinecone (cosine similarity, 3072 dimensions)
-- **LLM Provider**: Google Gemini — free-tier Flash models by default (chat: `gemini-flash-latest`, vision: `gemini-2.5-flash`). ⚠️ The project's Gemini key is on the **free tier**, where Gemini 3 Pro (`gemini-3-pro-preview`) has a quota of **0** and returns 429 on every call. Override the models via `GEMINI_CHAT_MODEL` / `GEMINI_VISION_MODEL` only after upgrading the key to a paid plan.
+- **LLM Provider**: Google Gemini — defaults to **Gemini 3.5 Flash** for both chat and vision (`gemini-3.5-flash`). ⚠️ This requires a key with quota for 3.x models. A **free-tier** key may have quota **0** for 3.x models (Gemini 3 Pro `gemini-3-pro-preview` definitely does) and will return **429** on every call. On a free-tier key, override back to Flash via `GEMINI_CHAT_MODEL=gemini-flash-latest` / `GEMINI_VISION_MODEL=gemini-2.5-flash`.
 - **Embeddings**: OpenAI `text-embedding-3-large` (3072 dimensions)
 - **Image Processing**: Sharp (preview generation)
 
@@ -681,10 +681,10 @@ const user = await requireAdmin(supabase) // Throws if not admin
 ### Gemini Integration
 
 **Models** (defined in `lib/gemini.ts`, both overridable via env):
-- **Chat** (asset selection): `gemini-flash-latest` — override with `GEMINI_CHAT_MODEL`
-- **Vision** (asset analysis): `gemini-2.5-flash` — override with `GEMINI_VISION_MODEL`
+- **Chat** (asset selection): `gemini-3.5-flash` — override with `GEMINI_CHAT_MODEL`
+- **Vision** (asset analysis): `gemini-3.5-flash` — override with `GEMINI_VISION_MODEL`
 
-⚠️ **Do not use `gemini-3-pro-preview`** unless the Gemini key is on a paid plan — it has a free-tier quota of 0 and 429s on every call (this silently broke chat search in production). See the "Gemini API Errors" troubleshooting entry.
+⚠️ `gemini-3.5-flash` (and any 3.x model) requires a key with quota for 3.x models. `gemini-3-pro-preview` has a free-tier quota of 0 and 429s on every call (this silently broke chat search in production once). On a free-tier key, override back to `gemini-flash-latest` (chat) / `gemini-2.5-flash` (vision). See the "Gemini API Errors" troubleshooting entry.
 
 **Best Practices**:
 
@@ -1077,7 +1077,7 @@ await pineconeIndex.deleteAll()
 **Symptom**: Chat search fails at the "Generating response..." step; logs show `Error generating chat response with Gemini`. Or 400/403 errors.
 
 **Causes**:
-1. **Free-tier model quota (most common here)**: `gemini-3-pro-preview` has a free-tier quota of **0** → every call returns **429 RESOURCE_EXHAUSTED**. The generic re-thrown error hides this; call the model directly with the key to see the real 429.
+1. **Free-tier model quota (most common here)**: 3.x models — including the current default `gemini-3.5-flash` and `gemini-3-pro-preview` — can have a free-tier quota of **0** → every call returns **429 RESOURCE_EXHAUSTED**. The generic re-thrown error hides this; call the model directly with the key to see the real 429.
 2. Invalid API key
 3. Model name incorrect / not available to the key
 4. Response schema too strict
@@ -1093,7 +1093,8 @@ curl -s "https://generativelanguage.googleapis.com/v1beta/models/<model>:generat
   -H 'Content-Type: application/json' -d '{"contents":[{"parts":[{"text":"hi"}]}]}'
 ```
 ```typescript
-// Stay on free-tier models unless the key is upgraded:
+// Default is gemini-3.5-flash. On a free-tier key (quota 0 for 3.x),
+// override back to Flash models:
 //   chat   → gemini-flash-latest   (GEMINI_CHAT_MODEL)
 //   vision → gemini-2.5-flash      (GEMINI_VISION_MODEL)
 ```
